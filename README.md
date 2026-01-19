@@ -5,8 +5,8 @@
 
 ## Prerequisites
 
-* Bun
-* GitHub CLI
+- Bun
+- GitHub CLI
 
 ## Prepare
 
