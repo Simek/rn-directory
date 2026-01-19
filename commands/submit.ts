@@ -1,18 +1,13 @@
 import { $ } from 'bun';
 
-import { type LibraryDataEntryType, type PackageJsonRepository } from '../types';
-import { directoryExist, parseRepositoryData } from '../utils';
+import { type LibraryDataEntryType, type PackageJsonRepository } from '~/types';
+import { checkGHCLIAvailability, checkPresenceInRegistries, directoryExist, parseRepositoryData } from '~/utils';
 
 const BASE_REPO = 'react-native-community/directory';
 const LIBRARIES_FILE = 'react-native-libraries.json';
 
 export default async function submit() {
-  try {
-    await $`gh --version`.quiet();
-  } catch (_) {
-    console.error('GitHub CLI need to be installed on your system, see: https://cli.github.com/');
-    process.exit(1);
-  }
+  await checkGHCLIAvailability();
 
   const packageJson = Bun.file('./package.json');
 
@@ -24,19 +19,16 @@ export default async function submit() {
   const packageJsonContent = await packageJson.json();
   const packageName = packageJsonContent.name;
 
-  const directoryResult = await fetch(`https://reactnative.directory/api/library?name=${packageName}&check=true`);
-  const directoryData = (await directoryResult.json()) as Record<string, boolean>;
+  await checkPresenceInRegistries(packageName);
 
-  if (directoryData[packageName]) {
-    console.warn(
-      `The package already exist in the directory. Visit the package page at https://reactnative.directory/package/${packageName}`
-    );
-    process.exit(0);
+  if (packageJsonContent.private) {
+    console.error('You cannot submit package which is marked as private');
+    process.exit(1);
   }
 
   const repositoryData: PackageJsonRepository = packageJsonContent.repository;
 
-  // TODO: validate repo existence + public
+  // TODO: validate repo existence
   if (!repositoryData) {
     console.error(
       'You need to define the repository data inside `package.json` file, see: https://docs.npmjs.com/cli/v11/configuring-npm/package-json#repository'
@@ -62,7 +54,7 @@ export default async function submit() {
   }
 
   if (!forkRepo) {
-    console.warn(`Cannot extract fork name from the GitHub CLI command`);
+    console.error(`Cannot extract fork name from the GitHub CLI command output`);
     process.exit(1);
   }
 
@@ -91,9 +83,12 @@ export default async function submit() {
   const librariesJsonSHA = (await $`gh api repos/${forkRepo}/contents/${LIBRARIES_FILE}?ref=${branchName} -q .sha`.text()).trim();
   const librariesJsonContent = await $`gh api repos/${forkRepo}/contents/${LIBRARIES_FILE}?ref=${branchName} -q .content`.text();
   const librariesArray: LibraryDataEntryType[] = JSON.parse(atob(librariesJsonContent));
+  const isLibraryAlreadyPresent = librariesArray.some(({ githubUrl }) => githubUrl === repositoryUrl);
 
-  if (!librariesArray.some(({ githubUrl }) => githubUrl === repositoryUrl)) {
-    // TODO: cleanup entry
+  if (isLibraryAlreadyPresent) {
+    console.warn(`Skipping adding package since it already exist in the definitions file on the branch`);
+  } else {
+    // TODO: cleanup and improve entry
     librariesArray.push({
       githubUrl: repositoryUrl,
       ...(directoryExist('example')
@@ -107,38 +102,40 @@ export default async function submit() {
   }
 
   console.log('\nThe following entry will be proposed in the PR:');
-  console.log(librariesArray.at(-1));
+  console.log(librariesArray.find(({ githubUrl }) => githubUrl === repositoryUrl));
 
   const answer = prompt('Would you like to continue the process? (y/n)')?.trim().toLowerCase();
   const yes = answer === 'y' || answer === 'yes';
 
   if (!yes) {
-    console.log('Submitting aborted.');
+    console.warn('Submitting aborted on user request.');
     process.exit(1);
   }
 
-  await Bun.write(LIBRARIES_FILE, JSON.stringify(librariesArray, null, 2));
+  if (!isLibraryAlreadyPresent) {
+    await Bun.write(LIBRARIES_FILE, JSON.stringify(librariesArray, null, 2));
 
-  await $`bunx --silent oxfmt@latest ${LIBRARIES_FILE}`;
+    await $`bunx --silent oxfmt@latest ${LIBRARIES_FILE}`;
 
-  const tempLibrariesFile = Bun.file(LIBRARIES_FILE);
+    const tempLibrariesFile = Bun.file(LIBRARIES_FILE);
 
-  await Bun.write(
-    'commit.json',
-    JSON.stringify({
-      message,
-      branch: branchName,
-      sha: librariesJsonSHA,
-      content: btoa(await tempLibrariesFile.text()),
-    })
-  );
+    await Bun.write(
+      'commit.json',
+      JSON.stringify({
+        message,
+        branch: branchName,
+        sha: librariesJsonSHA,
+        content: btoa(await tempLibrariesFile.text()),
+      })
+    );
 
-  await $`gh api repos/${forkRepo}/contents/${LIBRARIES_FILE} -X PUT -H "Content-Type: application/json" --input commit.json"`.quiet();
+    await $`gh api repos/${forkRepo}/contents/${LIBRARIES_FILE} -X PUT -H "Content-Type: application/json" --input commit.json"`.quiet();
 
-  await tempLibrariesFile.delete();
+    await tempLibrariesFile.delete();
 
-  const tempCommitFile = Bun.file('commit.json');
-  await tempCommitFile.delete();
+    const tempCommitFile = Bun.file('commit.json');
+    await tempCommitFile.delete();
+  }
 
   await Bun.write(
     'pr.md',
@@ -155,7 +152,7 @@ This PR adds \`${packageName}\` (${repositoryUrl}) package to the directory.
 `
   );
 
-  await $`gh pr create -R ${BASE_REPO} --head ${forkRepo.split('/')[0]}:add-${packageName} --base main --title "${message}" --body-file pr.md"`;
+  await $`gh pr create -R ${BASE_REPO} --head ${forkRepo.split('/')[0]}:${branchName} --base main --title "${message}" --body-file pr.md"`;
 
   const tempPRBodyFile = Bun.file('pr.md');
   await tempPRBodyFile.delete();

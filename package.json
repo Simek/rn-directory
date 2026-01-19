@@ -1,6 +1,10 @@
 {
   "name": "rnd-cli",
-  "private": true,
+  "version": "0.0.1",
+  "bugs": {
+    "url": "https://github.com/simek/rnd-cli/issues"
+  },
+  "license": "MIT",
   "repository": "github:simek/rnd-cli",
   "bin": {
     "rnd-cli": "./index.ts"
@@ -17,5 +21,8 @@
     "oxlint": "^1.39.0",
     "oxlint-tsgolint": "^0.11.1",
     "typescript": "^5.9.3"
+  },
+  "engines": {
+    "bun": ">=1.3"
   }
 }

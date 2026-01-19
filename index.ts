@@ -1,7 +1,7 @@
 #! /usr/bin/env bun
 
-import help from './commands/help.ts';
-import submit from './commands/submit.ts';
+import help from '~/commands/help.ts';
+import submit from '~/commands/submit.ts';
 
 type Command = (args: string[]) => Promise<void> | void;
 
