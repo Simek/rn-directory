@@ -1,7 +1,7 @@
 # rnd-cli
 
 > [!WARNING]
-> This project is heavy WIP, things might be incorrect or break.
+> This project is heavy WIP, things might be incorrect or just break.
 
 ## Prerequisites
 
@@ -17,6 +17,8 @@ bun link rnd-cli
 ```
 
 ## Usage
+
+Navigate to the library directory, then run:
 
 ```sh
 rnd-cli submit
