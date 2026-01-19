@@ -1,0 +1,14 @@
+{
+  "name": "rnd-cli",
+  "module": "index.ts",
+  "repository": "github:simek/rnd-cli",
+  "bin": {
+    "rnd-cli": "./index.ts"
+  },
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "^1.3.6",
+    "typescript": "^5.9.3"
+  }
+}
