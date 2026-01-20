@@ -1,5 +1,7 @@
+import { $ } from 'bun';
+
 import { type LibraryDataEntryType, type PackageJsonRepository } from '~/types';
-import { directoryExist, parseRepositoryData } from '~/utils';
+import { directoryExist, parseGitHubUrl, parseRepositoryData } from '~/utils';
 
 import { createAndPushCommit, createBranchInFork, createPRForRND, fetchLibrariesFromForkBranch, forkRNDRepo } from './common/actions.ts';
 import { checkGHCLIAvailability, checkPresenceInRegistries } from './common/checks';
@@ -17,6 +19,8 @@ export default async function autoSubmit() {
   const packageJsonContent = await packageJson.json();
   const packageName = packageJsonContent.name;
 
+  console.log(`Starting process to submit \`${packageName}\` to the directory`);
+
   await checkPresenceInRegistries(packageName);
 
   if (packageJsonContent.private) {
@@ -26,7 +30,6 @@ export default async function autoSubmit() {
 
   const repositoryData: PackageJsonRepository = packageJsonContent.repository;
 
-  // TODO: validate repo existence
   if (!repositoryData) {
     console.error(
       'You need to define the repository data inside `package.json` file, see: https://docs.npmjs.com/cli/v11/configuring-npm/package-json#repository'
@@ -39,6 +42,17 @@ export default async function autoSubmit() {
   if (!repositoryUrl) {
     console.error(`Invalid repository URL (${repositoryUrl}), see: https://docs.npmjs.com/cli/v11/configuring-npm/package-json#repository`);
     process.exit(1);
+  }
+
+  const { repoName, repoOwner } = parseGitHubUrl(repositoryUrl);
+  try {
+    await $`gh repo view ${repoOwner}/${repoName}`.quiet();
+  } catch (error) {
+    if (error instanceof $.ShellError) {
+      console.error(error.stderr.toString().replace('GraphQL: ', '').replace('gh: ', ''));
+      console.error('Make sure that provided URL is correct, repository exist and is publicly available');
+      process.exit(1);
+    }
   }
 
   console.log('');
@@ -55,16 +69,18 @@ export default async function autoSubmit() {
   if (isLibraryAlreadyPresent) {
     console.warn(`Skipping adding package since it already exist in the definitions file on the branch`);
   } else {
+    const hasPluginFile = await Bun.file('app.plugin.js').exists();
+
     // TODO: cleanup and improve entry
     const packageEntry: LibraryDataEntryType = {
       githubUrl: repositoryUrl,
-      ...(directoryExist('example')
-        ? {
-            examples: [`${repositoryUrl}/tree/HEAD/example`],
-          }
-        : {}),
-      ios: directoryExist('ios'),
+      examples: directoryExist('example') ? [`${repositoryUrl}/tree/HEAD/example`] : undefined,
+      configPlugin: hasPluginFile ? true : undefined,
+      ios: directoryExist('ios') || directoryExist('apple'),
       android: directoryExist('android'),
+      macos: directoryExist('macos') || directoryExist('apple'),
+      tvos: directoryExist('tvos') || directoryExist('apple'),
+      windows: directoryExist('windows'),
     };
 
     librariesArray.push(JSON.parse(JSON.stringify(packageEntry)));
