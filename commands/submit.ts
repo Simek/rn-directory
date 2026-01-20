@@ -17,25 +17,25 @@ export default async function submit() {
     console.error('Incorrect GitHub repository URL. Valid formats are:');
     console.error('- https://github.com/<OWNER>/<REPOSITORY>');
     console.error('- https://github.com/<OWNER>/<REPOSITORY>/tree/<BRANCH>/<PATH_TO_PACKAGE> (in monorepos)');
-    // TODO: support shorthand
-    // console.error('- <OWNER>/<REPOSITORY> (shorthand)');
+    console.error('- <OWNER>/<REPOSITORY> (shorthand)');
     process.exit(1);
   }
 
-  const { repoName, repoOwner, packagePath, isMonorepo } = parseGitHubUrl(repositoryUrl);
+  const { repoName, repoOwner, packagePath, isMonorepo } = parseGitHubUrl(
+    repositoryUrl.includes('://') ? repositoryUrl : `https://github.com/${repositoryUrl}`
+  );
   let packageJsonResponse;
 
   try {
     if (isMonorepo) {
-      packageJsonResponse =
-        await $`gh api /repos/${repoOwner}/${repoName}/contents/${packagePath.slice(1)}package.json -q .content`.quiet();
+      packageJsonResponse = await $`gh api /repos/${repoOwner}/${repoName}/contents/${packagePath}/package.json -q .content`.quiet();
     } else {
       packageJsonResponse = await $`gh api /repos/${repoOwner}/${repoName}/contents/package.json -q .content`.quiet();
     }
   } catch (error) {
     if (error instanceof $.ShellError) {
       console.error(error.stderr.toString().replace('GraphQL: ', '').replace('gh: ', ''));
-      console.error('Make sure that repository exist and is publicly available');
+      console.error('Make sure that provided URL is correct, repository exist and is publicly available');
       process.exit(1);
     }
   }
