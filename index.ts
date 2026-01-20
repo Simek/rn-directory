@@ -1,5 +1,6 @@
 #! /usr/bin/env bun
 
+import autoSubmit from '~/commands/autoSubmit.ts';
 import help from '~/commands/help.ts';
 import submit from '~/commands/submit.ts';
 
@@ -8,6 +9,7 @@ type Command = (args: string[]) => Promise<void> | void;
 const commands: Record<string, Command> = {
   help,
   submit,
+  autoSubmit,
 };
 
 async function main() {

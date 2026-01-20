@@ -21,5 +21,7 @@ bun link rnd-cli
 Navigate to the library directory, then run:
 
 ```sh
-rnd-cli submit
+rnd-cli submit # manually enter package data
+# OR
+rnd-cli autoSubmit # create entry automatically for the package in current directory
 ```

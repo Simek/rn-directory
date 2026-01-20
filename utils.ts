@@ -1,5 +1,3 @@
-import { $ } from 'bun';
-
 import { type PackageJsonRepository } from '~/types';
 
 export function directoryExist(path: string) {
@@ -21,30 +19,44 @@ export function parseRepositoryData(data: PackageJsonRepository) {
   return data.url.replace('git+', '').replace('.git', '');
 }
 
-export async function checkGHCLIAvailability() {
-  try {
-    await $`gh --version`.quiet();
-  } catch (_) {
-    console.error('GitHub CLI need to be installed on your system, see: https://cli.github.com/');
-    process.exit(1);
-  }
+export function parseGitHubUrl(url: string) {
+  const [, , , repoOwner, repoName, ...path] = url.split('/');
+
+  const isMonorepo = !!(path && path.length);
+  const branchName = path[1];
+  const packagePath = isMonorepo ? path.slice(2).join('/').replace('%40', '@') : '.';
+
+  return {
+    repoOwner,
+    repoName,
+    isMonorepo,
+    branchName,
+    packagePath,
+  };
 }
 
-export async function checkPresenceInRegistries(packageName: string) {
-  const npmResult = await fetch(`https://registry.npmjs.org/${packageName}/latest`);
+export function supportPrompt(platform: string, suffix = 'Supports') {
+  const answer = prompt(`• ${suffix} ${platform}? (y/n)`)?.trim().toLowerCase();
 
-  if (npmResult.status !== 200) {
-    console.error('You cannot submit package which is not published to npm registry');
+  if (!answer || !['y', 'yes', 'n', 'no'].includes(answer)) {
+    console.error(`Incorrect ${platform} support status`);
     process.exit(1);
   }
 
-  const directoryResult = await fetch(`https://reactnative.directory/api/library?name=${packageName}&check=true`);
-  const directoryData = (await directoryResult.json()) as Record<string, boolean>;
+  return answer;
+}
 
-  if (directoryData[packageName]) {
-    console.warn(
-      `The package already exist in the directory.\nVisit the package page at https://reactnative.directory/package/${packageName}`
-    );
-    process.exit(0);
+export function getNewArchitectureValue(status: string) {
+  switch (status) {
+    case 'y':
+    case 'yes':
+      return true;
+    case 'n':
+    case 'no':
+      return false;
+    case 'only':
+      return 'new-arch-only';
+    default:
+      return undefined;
   }
 }

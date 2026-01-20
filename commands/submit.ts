@@ -1,159 +1,143 @@
 import { $ } from 'bun';
 
-import { type LibraryDataEntryType, type PackageJsonRepository } from '~/types';
-import { checkGHCLIAvailability, checkPresenceInRegistries, directoryExist, parseRepositoryData } from '~/utils';
+import { type LibraryDataEntryType } from '~/types.ts';
+import { getNewArchitectureValue, parseGitHubUrl, supportPrompt } from '~/utils';
 
-const BASE_REPO = 'react-native-community/directory';
-const LIBRARIES_FILE = 'react-native-libraries.json';
+import { createAndPushCommit, createBranchInFork, createPRForRND, fetchLibrariesFromForkBranch, forkRNDRepo } from './common/actions.ts';
+import { checkGHCLIAvailability, checkPresenceInRegistries } from './common/checks';
 
 export default async function submit() {
   await checkGHCLIAvailability();
 
-  const packageJson = Bun.file('./package.json');
+  console.log("Let's geather the information needed to submit new package to the directory:");
 
-  if (!(await packageJson.exists())) {
-    console.error('You need to run the command inside the library repository, where `package.json` file is located');
+  const repositoryUrl = prompt('• GitHub URL:')?.trim().toLowerCase();
+
+  if (!repositoryUrl || repositoryUrl.includes(' ')) {
+    console.error('Incorrect GitHub repository URL. Valid formats are:');
+    console.error('- https://github.com/<OWNER>/<REPOSITORY>');
+    console.error('- https://github.com/<OWNER>/<REPOSITORY>/tree/<BRANCH>/<PATH_TO_PACKAGE> (in monorepos)');
+    // TODO: support shorthand
+    // console.error('- <OWNER>/<REPOSITORY> (shorthand)');
     process.exit(1);
   }
 
-  const packageJsonContent = await packageJson.json();
-  const packageName = packageJsonContent.name;
+  const { repoName, repoOwner, packagePath, isMonorepo } = parseGitHubUrl(repositoryUrl);
+  let packageJsonResponse;
 
-  await checkPresenceInRegistries(packageName);
+  try {
+    if (isMonorepo) {
+      packageJsonResponse =
+        await $`gh api /repos/${repoOwner}/${repoName}/contents/${packagePath.slice(1)}package.json -q .content`.quiet();
+    } else {
+      packageJsonResponse = await $`gh api /repos/${repoOwner}/${repoName}/contents/package.json -q .content`.quiet();
+    }
+  } catch (error) {
+    if (error instanceof $.ShellError) {
+      console.error(error.stderr.toString().replace('GraphQL: ', '').replace('gh: ', ''));
+      console.error('Make sure that repository exist and is publicly available');
+      process.exit(1);
+    }
+  }
+
+  if (!packageJsonResponse) {
+    console.error('Cannot fetch `package.json` file from the repository');
+    process.exit(1);
+  }
+
+  const packageJsonContent = JSON.parse(atob(packageJsonResponse.text()));
 
   if (packageJsonContent.private) {
     console.error('You cannot submit package which is marked as private');
     process.exit(1);
   }
 
-  const repositoryData: PackageJsonRepository = packageJsonContent.repository;
+  const packageName = prompt('• Package name:', packageJsonContent.name)?.trim().toLowerCase();
 
-  // TODO: validate repo existence
-  if (!repositoryData) {
-    console.error(
-      'You need to define the repository data inside `package.json` file, see: https://docs.npmjs.com/cli/v11/configuring-npm/package-json#repository'
-    );
+  if (!packageName || packageName.includes(' ')) {
+    console.error('Incorrect package name');
     process.exit(1);
   }
 
-  const repositoryUrl = parseRepositoryData(repositoryData);
+  await checkPresenceInRegistries(packageName);
 
-  if (!repositoryUrl) {
-    console.error(`Invalid repository URL (${repositoryUrl}), see: https://docs.npmjs.com/cli/v11/configuring-npm/package-json#repository`);
+  // TODO: validate examples links
+  const examples = prompt('• Examples list: (separate multiple URLs with comma)')?.trim().toLowerCase();
+  const examplesList = examples?.split(',');
+
+  // TODO: support New Architecture note
+  const newArch = prompt('• Supports New Architecture? (y/n/untested/only)')?.trim().toLowerCase();
+
+  if (!newArch || !['y', 'yes', 'n', 'no', 'untested', 'only'].includes(newArch)) {
+    console.error('Incorrect New Architecture support status');
     process.exit(1);
   }
 
-  const forkCreationResult = await $`gh repo fork ${BASE_REPO} --clone=false --default-branch-only`;
+  const android = supportPrompt('Android');
+  const ios = supportPrompt('iOS');
+  const web = supportPrompt('Web');
+  const macos = supportPrompt('macOS');
+  const tvos = supportPrompt('tvOS');
+  const visionos = supportPrompt('visionOS');
+  const windows = supportPrompt('Windows');
 
-  let forkRepo;
+  const expoGo = supportPrompt('Expo Go', 'Is compatible with');
+  const fireos = supportPrompt('Amazon Fire OS', 'Is compatible with');
+  const horizon = supportPrompt('Meta Horizon OS', 'Is compatible with');
+  // TODO: support passing URL to fork package
+  const vegaos = supportPrompt('Vega OS', 'Is compatible with');
 
-  if (forkCreationResult.stderr.toString().length > 0) {
-    forkRepo = forkCreationResult.stderr.toString().match(/([^/\s]+\/[^/\s]+)(?=\s+already exists\b)/)?.[1] ?? undefined;
-  } else if (forkCreationResult.stdout.toString().length > 0) {
-    forkRepo = forkCreationResult.stdout.toString().match(/(?<=Created fork\s)([^/\s]+\/[^/\s]+)/)?.[1] ?? undefined;
-  }
+  console.log('');
 
-  if (!forkRepo) {
-    console.error(`Cannot extract fork name from the GitHub CLI command output`);
-    process.exit(1);
-  }
-
-  const forkSHA = (await $`gh api repos/${forkRepo}/git/ref/heads/main -q .object.sha`.text()).trim();
-
+  const forkRepo = await forkRNDRepo();
   const branchName = `add-${packageName}`;
-  const message = `Add ${packageName} to the directory`;
 
-  try {
-    await $`gh api repos/${forkRepo}/git/refs -f ref="refs/heads/${branchName}" -f sha="${forkSHA}"`.quiet();
-  } catch (error) {
-    if (error instanceof $.ShellError) {
-      if (error.stderr.toString().includes('HTTP 422')) {
-        console.warn(`Branch ${branchName} already exist in ${forkRepo}`);
-      } else {
-        console.error(`Branch creation failed with code ${error.exitCode}`);
-        console.error(error.stderr.toString());
-        process.exit(1);
-      }
-    } else {
-      console.error(error);
-      process.exit(1);
-    }
-  }
+  await createBranchInFork(forkRepo, branchName);
 
-  const librariesJsonSHA = (await $`gh api repos/${forkRepo}/contents/${LIBRARIES_FILE}?ref=${branchName} -q .sha`.text()).trim();
-  const librariesJsonContent = await $`gh api repos/${forkRepo}/contents/${LIBRARIES_FILE}?ref=${branchName} -q .content`.text();
-  const librariesArray: LibraryDataEntryType[] = JSON.parse(atob(librariesJsonContent));
+  const librariesArray = await fetchLibrariesFromForkBranch(forkRepo, branchName);
+
   const isLibraryAlreadyPresent = librariesArray.some(({ githubUrl }) => githubUrl === repositoryUrl);
 
   if (isLibraryAlreadyPresent) {
     console.warn(`Skipping adding package since it already exist in the definitions file on the branch`);
   } else {
-    // TODO: cleanup and improve entry
-    librariesArray.push({
+    // TODO: support images
+    // TODO: support config plugin
+    const packageEntry: LibraryDataEntryType = {
       githubUrl: repositoryUrl,
-      ...(directoryExist('example')
-        ? {
-            examples: [`${repositoryUrl}/tree/HEAD/example`],
-          }
-        : {}),
-      ios: directoryExist('ios'),
-      android: directoryExist('android'),
-    });
+      npmPkg: repositoryUrl.split('/').at(-1) !== packageName ? packageName : undefined,
+      examples: examplesList,
+      newArchitecture: getNewArchitectureValue(newArch),
+      ios: ['y', 'yes'].includes(ios) ? true : undefined,
+      android: ['y', 'yes'].includes(android) ? true : undefined,
+      web: ['y', 'yes'].includes(web) ? true : undefined,
+      macos: ['y', 'yes'].includes(macos) ? true : undefined,
+      tvos: ['y', 'yes'].includes(tvos) ? true : undefined,
+      visionos: ['y', 'yes'].includes(visionos) ? true : undefined,
+      windows: ['y', 'yes'].includes(windows) ? true : undefined,
+      expoGo: ['y', 'yes'].includes(expoGo) ? true : undefined,
+      fireos: ['y', 'yes'].includes(fireos) ? true : undefined,
+      horizon: ['y', 'yes'].includes(horizon) ? true : undefined,
+      vegaos: ['y', 'yes'].includes(vegaos) ? true : undefined,
+    };
+    librariesArray.push(JSON.parse(JSON.stringify(packageEntry)));
   }
 
   console.log('\nThe following entry will be proposed in the PR:');
   console.log(librariesArray.find(({ githubUrl }) => githubUrl === repositoryUrl));
 
-  const answer = prompt('Would you like to continue the process? (y/n)')?.trim().toLowerCase();
-  const yes = answer === 'y' || answer === 'yes';
+  const continueAnswer = prompt('\nWould you like to continue the process? (y/n)')?.trim().toLowerCase();
 
-  if (!yes) {
-    console.warn('Submitting aborted on user request.');
+  if (!continueAnswer || !['y', 'yes'].includes(continueAnswer)) {
+    console.warn('Submitting aborted on user request');
     process.exit(1);
   }
 
+  const message = `Add ${packageName} to the directory`;
+
   if (!isLibraryAlreadyPresent) {
-    await Bun.write(LIBRARIES_FILE, JSON.stringify(librariesArray, null, 2));
-
-    await $`bunx --silent oxfmt@latest ${LIBRARIES_FILE}`;
-
-    const tempLibrariesFile = Bun.file(LIBRARIES_FILE);
-
-    await Bun.write(
-      'commit.json',
-      JSON.stringify({
-        message,
-        branch: branchName,
-        sha: librariesJsonSHA,
-        content: btoa(await tempLibrariesFile.text()),
-      })
-    );
-
-    await $`gh api repos/${forkRepo}/contents/${LIBRARIES_FILE} -X PUT -H "Content-Type: application/json" --input commit.json"`.quiet();
-
-    await tempLibrariesFile.delete();
-
-    const tempCommitFile = Bun.file('commit.json');
-    await tempCommitFile.delete();
+    await createAndPushCommit(forkRepo, branchName, librariesArray, message);
   }
 
-  await Bun.write(
-    'pr.md',
-    `# 📝 Why & how
-
-This PR adds \`${packageName}\` (${repositoryUrl}) package to the directory.
-
-> [!NOTE]
-> This is an automatic submission created via \`rnd-cli\`.
-
-# ✅ Checklist
-
-- [x] Added library to **\`react-native-libraries.json\`**
-`
-  );
-
-  await $`gh pr create -R ${BASE_REPO} --head ${forkRepo.split('/')[0]}:${branchName} --base main --title "${message}" --body-file pr.md"`;
-
-  const tempPRBodyFile = Bun.file('pr.md');
-  await tempPRBodyFile.delete();
+  await createPRForRND(forkRepo, branchName, message, packageName, repositoryUrl);
 }

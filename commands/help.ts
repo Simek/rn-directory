@@ -3,7 +3,8 @@ export default function help() {
 rnd-cli <command> [options]
 
 Commands:
-  submit      create a PR in React Native Directory for the library
+  submit      manually create a PR in React Native Directory
+  autoSubmit  create a PR in React Native Directory for the library in current directory
   help        show this help
 
 Examples:
