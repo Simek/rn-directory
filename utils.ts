@@ -39,7 +39,7 @@ export function supportPrompt(platform: string, suffix = 'Supports') {
   const answer = prompt(`• ${suffix} ${platform}? (y/n)`)?.trim().toLowerCase();
 
   if (!answer || !['y', 'yes', 'n', 'no'].includes(answer)) {
-    console.error(`Incorrect ${platform} support status`);
+    printError(`Incorrect ${platform} support status`);
     process.exit(1);
   }
 
@@ -59,4 +59,17 @@ export function getNewArchitectureValue(status: string) {
     default:
       return undefined;
   }
+}
+
+export function getConfigPluginValue(configPlugin: string) {
+  if (configPlugin.startsWith('https://github.com')) {
+    return configPlugin;
+  } else if (['y', 'yes'].includes(configPlugin)) {
+    return true;
+  }
+  return undefined;
+}
+
+export function printError(error: string) {
+  console.error(`\n❌ ${error}`);
 }

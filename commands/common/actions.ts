@@ -1,6 +1,7 @@
 import { $ } from 'bun';
 
 import { type LibraryDataEntryType } from '~/types.ts';
+import { printError } from '~/utils.ts';
 
 import { BASE_REPO, LIBRARIES_FILE, OXFMT_TMP_CONFIG } from './constants';
 
@@ -16,7 +17,7 @@ export async function forkRNDRepo() {
   }
 
   if (!forkRepo) {
-    console.error(`Cannot extract fork name from the GitHub CLI command output`);
+    printError(`Cannot extract fork name from the GitHub CLI command output`);
     process.exit(1);
   }
 
@@ -33,7 +34,7 @@ export async function createBranchInFork(forkRepo: string, branchName: string) {
       if (error.stderr.toString().includes('HTTP 422')) {
         console.warn(`Branch ${branchName} already exist in ${forkRepo}`);
       } else {
-        console.error(`Branch creation failed with code ${error.exitCode}`);
+        printError(`Branch creation failed with code ${error.exitCode}`);
         console.error(error.stderr.toString());
         process.exit(1);
       }
@@ -47,6 +48,18 @@ export async function createBranchInFork(forkRepo: string, branchName: string) {
 export async function fetchLibrariesFromForkBranch(forkRepo: string, branchName: string) {
   const librariesJsonContent = await $`gh api repos/${forkRepo}/contents/${LIBRARIES_FILE}?ref=${branchName} -q .content`.text();
   return JSON.parse(atob(librariesJsonContent)) as LibraryDataEntryType[];
+}
+
+export function printSummaryAndConfirm(repositoryUrl: string, librariesArray: LibraryDataEntryType[]) {
+  console.log('\nThe following entry will be proposed in the PR:');
+  console.log(librariesArray.find(({ githubUrl }) => githubUrl === repositoryUrl));
+
+  const continueAnswer = prompt('\nWould you like to continue the process? (y/n)')?.trim().toLowerCase();
+
+  if (!continueAnswer || !['y', 'yes'].includes(continueAnswer)) {
+    printError('Submitting aborted on user request');
+    process.exit(1);
+  }
 }
 
 export async function createAndPushCommit(forkRepo: string, branchName: string, librariesArray: LibraryDataEntryType[], message: string) {
