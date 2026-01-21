@@ -112,6 +112,29 @@ export default async function submit() {
   // TODO: support passing package name of fork package
   const vegaos = supportPrompt('Vega OS', 'Is compatible with');
 
+  // TODO: support images
+  const packageEntry: LibraryDataEntryType = {
+    githubUrl: repositoryUrl,
+    npmPkg: repositoryUrl.split('/').at(-1) !== packageName ? packageName : undefined,
+    examples: examplesList,
+    newArchitecture: getNewArchitectureValue(newArch),
+    configPlugin: getConfigPluginValue(configPlugin),
+    ios: ['y', 'yes'].includes(ios) ? true : undefined,
+    android: ['y', 'yes'].includes(android) ? true : undefined,
+    web: ['y', 'yes'].includes(web) ? true : undefined,
+    macos: ['y', 'yes'].includes(macos) ? true : undefined,
+    tvos: ['y', 'yes'].includes(tvos) ? true : undefined,
+    visionos: ['y', 'yes'].includes(visionos) ? true : undefined,
+    windows: ['y', 'yes'].includes(windows) ? true : undefined,
+    expoGo: ['y', 'yes'].includes(expoGo) ? true : undefined,
+    fireos: ['y', 'yes'].includes(fireos) ? true : undefined,
+    horizon: ['y', 'yes'].includes(horizon) ? true : undefined,
+    vegaos: ['y', 'yes'].includes(vegaos) ? true : undefined,
+  };
+  const wellFormattedPackageEntry = JSON.parse(JSON.stringify(packageEntry));
+
+  printSummaryAndConfirm(wellFormattedPackageEntry);
+
   console.log('');
 
   const forkRepo = await forkRNDRepo();
@@ -120,41 +143,20 @@ export default async function submit() {
   await createBranchInFork(forkRepo, branchName);
 
   const librariesArray = await fetchLibrariesFromForkBranch(forkRepo, branchName);
+  const librayIndex = librariesArray.findIndex(({ githubUrl }) => githubUrl === repositoryUrl);
 
-  const isLibraryAlreadyPresent = librariesArray.some(({ githubUrl }) => githubUrl === repositoryUrl);
-
-  if (isLibraryAlreadyPresent) {
-    console.warn(`Skipping adding package since it already exist in the definitions file on the branch`);
+  if (librayIndex !== -1) {
+    console.log(`Replacing already existing entry in the definitions file on the branch`);
+    librariesArray[librayIndex] = wellFormattedPackageEntry;
   } else {
-    // TODO: support images
-    const packageEntry: LibraryDataEntryType = {
-      githubUrl: repositoryUrl,
-      npmPkg: repositoryUrl.split('/').at(-1) !== packageName ? packageName : undefined,
-      examples: examplesList,
-      newArchitecture: getNewArchitectureValue(newArch),
-      configPlugin: getConfigPluginValue(configPlugin),
-      ios: ['y', 'yes'].includes(ios) ? true : undefined,
-      android: ['y', 'yes'].includes(android) ? true : undefined,
-      web: ['y', 'yes'].includes(web) ? true : undefined,
-      macos: ['y', 'yes'].includes(macos) ? true : undefined,
-      tvos: ['y', 'yes'].includes(tvos) ? true : undefined,
-      visionos: ['y', 'yes'].includes(visionos) ? true : undefined,
-      windows: ['y', 'yes'].includes(windows) ? true : undefined,
-      expoGo: ['y', 'yes'].includes(expoGo) ? true : undefined,
-      fireos: ['y', 'yes'].includes(fireos) ? true : undefined,
-      horizon: ['y', 'yes'].includes(horizon) ? true : undefined,
-      vegaos: ['y', 'yes'].includes(vegaos) ? true : undefined,
-    };
-    librariesArray.push(JSON.parse(JSON.stringify(packageEntry)));
+    librariesArray.push(JSON.parse(JSON.stringify(wellFormattedPackageEntry)));
   }
 
-  printSummaryAndConfirm(repositoryUrl, librariesArray);
+  const message = librayIndex === -1 ? `Add ${packageName} to the directory` : `Update ${packageName} entry`;
 
-  const message = `Add ${packageName} to the directory`;
+  await createAndPushCommit(forkRepo, branchName, librariesArray, message);
 
-  if (!isLibraryAlreadyPresent) {
-    await createAndPushCommit(forkRepo, branchName, librariesArray, message);
-  }
+  console.log('');
 
   await createPRForRND(forkRepo, branchName, message, packageName, repositoryUrl);
 }

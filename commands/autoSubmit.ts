@@ -62,6 +62,23 @@ export default async function autoSubmit() {
     }
   }
 
+  const hasPluginFile = await Bun.file('app.plugin.js').exists();
+
+  // TODO: cleanup and improve entry
+  const packageEntry: LibraryDataEntryType = {
+    githubUrl: repositoryUrl,
+    examples: directoryExist('example') ? [`${repositoryUrl}/tree/HEAD/example`] : undefined,
+    configPlugin: hasPluginFile ? true : undefined,
+    ios: directoryExist('ios') || directoryExist('apple'),
+    android: directoryExist('android'),
+    macos: directoryExist('macos') || directoryExist('apple'),
+    tvos: directoryExist('tvos') || directoryExist('apple'),
+    windows: directoryExist('windows'),
+  };
+  const wellFormattedPackageEntry = JSON.parse(JSON.stringify(packageEntry));
+
+  printSummaryAndConfirm(wellFormattedPackageEntry);
+
   console.log('');
 
   const forkRepo = await forkRNDRepo();
@@ -70,36 +87,20 @@ export default async function autoSubmit() {
   await createBranchInFork(forkRepo, branchName);
 
   const librariesArray = await fetchLibrariesFromForkBranch(forkRepo, branchName);
+  const librayIndex = librariesArray.findIndex(({ githubUrl }) => githubUrl === repositoryUrl);
 
-  const isLibraryAlreadyPresent = librariesArray.some(({ githubUrl }) => githubUrl === repositoryUrl);
-
-  if (isLibraryAlreadyPresent) {
-    console.warn(`Skipping adding package since it already exist in the definitions file on the branch`);
+  if (librayIndex !== -1) {
+    console.log(`Replacing already existing entry in the definitions file on the branch`);
+    librariesArray[librayIndex] = JSON.parse(JSON.stringify(wellFormattedPackageEntry));
   } else {
-    const hasPluginFile = await Bun.file('app.plugin.js').exists();
-
-    // TODO: cleanup and improve entry
-    const packageEntry: LibraryDataEntryType = {
-      githubUrl: repositoryUrl,
-      examples: directoryExist('example') ? [`${repositoryUrl}/tree/HEAD/example`] : undefined,
-      configPlugin: hasPluginFile ? true : undefined,
-      ios: directoryExist('ios') || directoryExist('apple'),
-      android: directoryExist('android'),
-      macos: directoryExist('macos') || directoryExist('apple'),
-      tvos: directoryExist('tvos') || directoryExist('apple'),
-      windows: directoryExist('windows'),
-    };
-
-    librariesArray.push(JSON.parse(JSON.stringify(packageEntry)));
+    librariesArray.push(JSON.parse(JSON.stringify(wellFormattedPackageEntry)));
   }
 
-  printSummaryAndConfirm(repositoryUrl, librariesArray);
+  const message = librayIndex === -1 ? `Add ${packageName} to the directory` : `Update ${packageName} entry`;
 
-  const message = `Add ${packageName} to the directory`;
+  await createAndPushCommit(forkRepo, branchName, librariesArray, message);
 
-  if (!isLibraryAlreadyPresent) {
-    await createAndPushCommit(forkRepo, branchName, librariesArray, message);
-  }
+  console.log('');
 
   await createPRForRND(forkRepo, branchName, message, packageName, repositoryUrl);
 }

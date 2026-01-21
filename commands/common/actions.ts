@@ -50,9 +50,9 @@ export async function fetchLibrariesFromForkBranch(forkRepo: string, branchName:
   return JSON.parse(atob(librariesJsonContent)) as LibraryDataEntryType[];
 }
 
-export function printSummaryAndConfirm(repositoryUrl: string, librariesArray: LibraryDataEntryType[]) {
+export function printSummaryAndConfirm(packageEntry: LibraryDataEntryType) {
   console.log('\nThe following entry will be proposed in the PR:');
-  console.log(librariesArray.find(({ githubUrl }) => githubUrl === repositoryUrl));
+  console.log(packageEntry);
 
   const continueAnswer = prompt('\nWould you like to continue the process? (y/n)')?.trim().toLowerCase();
 
