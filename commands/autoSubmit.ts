@@ -1,7 +1,7 @@
 import { $ } from 'bun';
 
 import { type LibraryDataEntryType, type PackageJsonRepository } from '~/types';
-import { directoryExist, parseGitHubUrl, parseRepositoryData, printError } from '~/utils';
+import { directoryExist, isValidGHUrl, parseGitHubUrl, parseRepositoryData, printError } from '~/utils';
 
 import {
   createAndPushCommit,
@@ -46,7 +46,7 @@ export default async function autoSubmit() {
 
   const repositoryUrl = parseRepositoryData(repositoryData);
 
-  if (!repositoryUrl) {
+  if (!repositoryUrl || !isValidGHUrl(repositoryUrl)) {
     printError(`Invalid repository URL (${repositoryUrl}), see: https://docs.npmjs.com/cli/v11/configuring-npm/package-json#repository`);
     process.exit(1);
   }

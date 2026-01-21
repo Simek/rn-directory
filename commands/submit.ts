@@ -1,7 +1,16 @@
 import { $ } from 'bun';
 
 import { type LibraryDataEntryType } from '~/types.ts';
-import { getConfigPluginValue, getNewArchitectureValue, parseGitHubUrl, printError, supportPrompt } from '~/utils';
+import {
+  getConfigPluginValue,
+  getNewArchitectureValue,
+  isValidGHUrl,
+  isValidImageUrl,
+  isValidUrl,
+  parseGitHubUrl,
+  printError,
+  supportPrompt,
+} from '~/utils';
 
 import {
   createAndPushCommit,
@@ -16,7 +25,7 @@ import { checkGHCLIAvailability, checkPresenceInRegistries } from './common/chec
 export default async function submit() {
   await checkGHCLIAvailability();
 
-  console.log("👋  Let's geather the information needed to submit new package to https://reactnative.directory/.");
+  console.log("👋  Let's gather the information needed to submit new package to https://reactnative.directory/.");
 
   console.log('\nGeneral information:\n');
 
@@ -32,6 +41,11 @@ export default async function submit() {
 
   if (!repositoryUrl.includes('://')) {
     repositoryUrl = `https://github.com/${repositoryUrl}`;
+  }
+
+  if (!isValidGHUrl(repositoryUrl)) {
+    printError('Provided GitHub repository is not correct');
+    process.exit(1);
   }
 
   const { repoName, repoOwner, packagePath, isMonorepo } = parseGitHubUrl(repositoryUrl);
@@ -72,9 +86,29 @@ export default async function submit() {
 
   await checkPresenceInRegistries(packageName);
 
-  // TODO: validate examples links
-  const examples = prompt('• Examples list: (separate multiple URLs with comma)')?.trim().toLowerCase();
+  const examples = prompt('• Examples list: (separate URLs with comma)')?.trim().toLowerCase();
   const examplesList = examples?.split(',');
+
+  if (examplesList && examplesList.length > 0) {
+    const invalidExampleUrls = examplesList.filter(exampleUrl => !isValidUrl(exampleUrl));
+
+    if (invalidExampleUrls.length > 0) {
+      printError('The following example URLs are invalid:\n' + invalidExampleUrls.join('\n'));
+      process.exit(1);
+    }
+  }
+
+  const images = prompt('• Images list: (separate URLs with comma, no marketing materials)')?.trim().toLowerCase();
+  const imagesList = images?.split(',');
+
+  if (imagesList && imagesList.length > 0) {
+    const invalidImageUrls = imagesList.filter(imageUrl => !isValidImageUrl(imageUrl));
+
+    if (invalidImageUrls.length > 0) {
+      printError('The following image URLs are invalid:\n' + invalidImageUrls.join('\n'));
+      process.exit(1);
+    }
+  }
 
   // TODO: support New Architecture note
   const newArch = prompt('• Supports New Architecture? (y/n/untested/only)', 'untested')?.trim().toLowerCase();
@@ -86,8 +120,7 @@ export default async function submit() {
 
   const configPlugin = prompt('• Includes Expo config plugin? (y/n/<GITHUB_URL>)')?.trim().toLowerCase();
 
-  // TODO: better GH URL validation
-  if (!configPlugin || (!['y', 'yes', 'n', 'no'].includes(configPlugin) && !configPlugin.startsWith('https://github.com'))) {
+  if (!configPlugin || (!['y', 'yes', 'n', 'no'].includes(configPlugin) && !isValidGHUrl(configPlugin))) {
     printError(
       'Incorrect config plugin information. If plugin is included within the package answer "yes", ot if it is located in separate repository paste the URL as an answer'
     );

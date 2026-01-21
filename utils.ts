@@ -73,3 +73,15 @@ export function getConfigPluginValue(configPlugin: string) {
 export function printError(error: string) {
   console.error(`\n❌ ${error}`);
 }
+
+export function isValidUrl(url: string) {
+  return /^https?:\/\/(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/\S*)?$/i.test(url);
+}
+
+export function isValidGHUrl(url: string) {
+  return /^https?:\/\/(?:www\.)?github\.com\/[a-z0-9_.-]+\/[a-z0-9_.-]+(?:\/tree\/[a-z0-9_.@%\-/]+)?\/?$/i.test(url);
+}
+
+export function isValidImageUrl(url: string) {
+  return /^https?:\/\/[\w./:%+-]+\.(?:jpe?g|gif|png|webp)(\?\S*)?$/i.test(url);
+}

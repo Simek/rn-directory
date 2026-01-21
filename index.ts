@@ -4,7 +4,7 @@ import autoSubmit from '~/commands/autoSubmit.ts';
 import help from '~/commands/help.ts';
 import submit from '~/commands/submit.ts';
 
-type Command = (args: string[]) => Promise<void> | void;
+import { type Command } from './types';
 
 const commands: Record<string, Command> = {
   help,

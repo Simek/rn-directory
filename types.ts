@@ -1,3 +1,5 @@
+export type Command = (args: string[]) => Promise<void> | void;
+
 export type PackageJsonRepository = string | { type: string; url: string; directory?: string };
 
 export type LibraryDataEntryType = {
