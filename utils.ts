@@ -59,6 +59,19 @@ export function getConfigPluginValue(configPlugin: string) {
   return undefined;
 }
 
+export function validateUrlsListString(value: string, message: string, validator: (url: string) => boolean) {
+  if (!value || value.length === 0) {
+    return;
+  }
+  const valuesList = value.split(',');
+  if (valuesList && valuesList.length > 0) {
+    const invalidUrls = valuesList.filter(imageUrl => !validator(imageUrl));
+    if (invalidUrls.length > 0) {
+      return `${message}:\n- ` + invalidUrls.join('\n - ');
+    }
+  }
+}
+
 export function isValidUrl(url: string) {
   return /^https?:\/\/(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/\S*)?$/i.test(url);
 }
@@ -69,4 +82,8 @@ export function isValidGHUrl(url: string) {
 
 export function isValidImageUrl(url: string) {
   return /^https?:\/\/[\w./:%+-]+\.(?:jpe?g|gif|png|webp)(\?\S*)?$/i.test(url);
+}
+
+export function isValidNpmPackageName(name: string) {
+  return /^(?:@[a-z0-9][a-z0-9-._~]*\/)?[a-z0-9][a-z0-9-._~]*$/i.test(name);
 }

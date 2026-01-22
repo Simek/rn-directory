@@ -2,7 +2,16 @@ import { cancel, intro, isCancel, log, multiselect, outro, select, spinner, text
 import { $ } from 'bun';
 
 import { type LibraryDataEntryType } from '~/types.ts';
-import { getConfigPluginValue, getNewArchitectureValue, isValidGHUrl, isValidImageUrl, isValidUrl, parseGitHubUrl } from '~/utils';
+import {
+  getConfigPluginValue,
+  getNewArchitectureValue,
+  isValidGHUrl,
+  isValidImageUrl,
+  isValidNpmPackageName,
+  isValidUrl,
+  parseGitHubUrl,
+  validateUrlsListString,
+} from '~/utils';
 
 import {
   createAndPushCommit,
@@ -26,7 +35,7 @@ export default async function submit() {
     validate(value) {
       if (value.length === 0) {
         return `GitHub URL is required`;
-      } else if (value.includes(' ') || (value.includes('://') && !isValidGHUrl(value))) {
+      } else if (value.includes(' ') || !value.includes('/') || (value.includes('://') && !isValidGHUrl(value))) {
         return `Incorrect GitHub repository URL. Valid formats are:
           - https://github.com/<OWNER>/<REPOSITORY>
           - https://github.com/<OWNER>/<REPOSITORY>/tree/<BRANCH>/<PATH_TO_PACKAGE> (in monorepos)
@@ -81,8 +90,7 @@ export default async function submit() {
     validate(value) {
       if (!packageJsonContent.name && value.length === 0) {
         return `Package name is required`;
-      } else if (value.includes(' ')) {
-        // TODO: better package name validation
+      } else if (value.length > 0 && !isValidNpmPackageName(value)) {
         return `Incorrect package name.`;
       }
     },
@@ -99,16 +107,7 @@ export default async function submit() {
     message: 'Examples URL list:',
     placeholder: 'separate multiple URLs with comma',
     validate(value) {
-      if (!value || value.length === 0) {
-        return;
-      }
-      const examplesList = value.split(',');
-      if (examplesList && examplesList.length > 0) {
-        const invalidExampleUrls = examplesList.filter(exampleUrl => !isValidUrl(exampleUrl));
-        if (invalidExampleUrls.length > 0) {
-          return 'The following example URLs are invalid:\n- ' + invalidExampleUrls.join('\n - ');
-        }
-      }
+      return validateUrlsListString(value, 'The following example URLs are invalid', isValidUrl);
     },
   });
 
@@ -123,16 +122,7 @@ export default async function submit() {
     message: 'Images URL list:',
     placeholder: 'separate multiple URLs with comma, no marketing materials',
     validate(value) {
-      if (!value || value.length === 0) {
-        return;
-      }
-      const imagesList = value.split(',');
-      if (imagesList && imagesList.length > 0) {
-        const invalidImageUrls = imagesList.filter(imageUrl => !isValidImageUrl(imageUrl));
-        if (invalidImageUrls.length > 0) {
-          return 'The following image URLs are invalid:\n- ' + invalidImageUrls.join('\n - ');
-        }
-      }
+      return validateUrlsListString(value, 'The following image URLs are invalid', isValidImageUrl);
     },
   });
 
@@ -229,7 +219,6 @@ export default async function submit() {
     process.exit(0);
   }
 
-  // TODO: support images
   const packageEntry: LibraryDataEntryType = {
     githubUrl: repositoryUrl,
     npmPkg: repositoryUrl.split('/').at(-1) !== packageName ? packageName : undefined,
