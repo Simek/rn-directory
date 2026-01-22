@@ -1,4 +1,4 @@
-import { cancel, intro, isCancel, log, multiselect, select, spinner, text } from '@clack/prompts';
+import { cancel, intro, isCancel, log, multiselect, outro, select, spinner, text } from '@clack/prompts';
 import { $ } from 'bun';
 
 import { type LibraryDataEntryType } from '~/types.ts';
@@ -290,5 +290,7 @@ export default async function submit() {
 
   await createPRForRND(forkRepo, branchName, message, packageName, repositoryUrl);
 
-  prProgress.stop('PR in React Native Directory has been created, thanks!');
+  prProgress.stop('PR in React Native Directory has been created');
+
+  outro('Thanks for contributing! 💙');
 }
