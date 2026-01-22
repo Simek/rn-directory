@@ -1,23 +1,24 @@
+import { cancel, isCancel, log, select } from '@clack/prompts';
 import { $ } from 'bun';
 
 import { type LibraryDataEntryType } from '~/types.ts';
-import { printError } from '~/utils.ts';
 
 import { BASE_REPO, LIBRARIES_FILE, OXFMT_TMP_CONFIG } from './constants';
 
 export async function forkRNDRepo() {
-  const forkCreationResult = await $`gh repo fork ${BASE_REPO} --clone=false --default-branch-only`;
+  const forkCreationResult = await $`gh repo fork ${BASE_REPO} --clone=false --default-branch-only`.quiet();
 
   let forkRepo;
 
   if (forkCreationResult.stderr.toString().length > 0) {
     forkRepo = forkCreationResult.stderr.toString().match(/([^/\s]+\/[^/\s]+)(?=\s+already exists\b)/)?.[1] ?? undefined;
+    log.warn(`${forkRepo} already exists`);
   } else if (forkCreationResult.stdout.toString().length > 0) {
     forkRepo = forkCreationResult.stdout.toString().match(/(?<=Created fork\s)([^/\s]+\/[^/\s]+)/)?.[1] ?? undefined;
   }
 
   if (!forkRepo) {
-    printError(`Cannot extract fork name from the GitHub CLI command output`);
+    cancel(`Cannot extract fork name from the GitHub CLI command output`);
     process.exit(1);
   }
 
@@ -32,14 +33,13 @@ export async function createBranchInFork(forkRepo: string, branchName: string) {
   } catch (error) {
     if (error instanceof $.ShellError) {
       if (error.stderr.toString().includes('HTTP 422')) {
-        console.warn(`Branch ${branchName} already exist in ${forkRepo}`);
+        log.warn(`Branch ${branchName} already exist in ${forkRepo}`);
       } else {
-        printError(`Branch creation failed with code ${error.exitCode}`);
-        console.error(error.stderr.toString());
+        cancel(`Branch creation failed with code ${error.exitCode}`);
         process.exit(1);
       }
     } else {
-      console.error(error);
+      cancel(error as string);
       process.exit(1);
     }
   }
@@ -50,15 +50,20 @@ export async function fetchLibrariesFromForkBranch(forkRepo: string, branchName:
   return JSON.parse(atob(librariesJsonContent)) as LibraryDataEntryType[];
 }
 
-export function printSummaryAndConfirm(packageEntry: LibraryDataEntryType) {
-  console.log('\nThe following entry will be proposed in the PR:');
-  console.log(packageEntry);
+export async function printSummaryAndConfirm(packageEntry: LibraryDataEntryType) {
+  log.info(`The following entry will be proposed in the PR:\n\n${JSON.stringify(packageEntry, null, 2)}`);
 
-  const continueAnswer = prompt('\nWould you like to continue the process? (y/n)')?.trim().toLowerCase();
+  const continueProcess = await select({
+    message: 'Would you like to continue the process?',
+    options: [
+      { value: 'yes', label: 'Yes' },
+      { value: 'no', label: 'No' },
+    ],
+  });
 
-  if (!continueAnswer || !['y', 'yes'].includes(continueAnswer)) {
-    printError('Submitting aborted on user request');
-    process.exit(1);
+  if (isCancel(continueProcess) || continueProcess === 'no') {
+    cancel('Submission cancelled.');
+    process.exit(0);
   }
 }
 
@@ -109,7 +114,10 @@ This PR adds \`${packageName}\` (${repositoryUrl}) package to the directory.
 `
   );
 
-  await $`gh pr create -R ${BASE_REPO} --head ${forkRepo.split('/')[0]}:${branchName} --base main --title "${message}" --body-file pr.md`;
+  const creationResponse =
+    await $`gh pr create -R ${BASE_REPO} --head ${forkRepo.split('/')[0]}:${branchName} --base main --title "${message}" --body-file pr.md --dry-run`.quiet();
+
+  log.info(creationResponse.stdout.toString());
 
   const tempPRBodyFile = Bun.file('pr.md');
   await tempPRBodyFile.delete();

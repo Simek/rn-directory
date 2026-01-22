@@ -35,17 +35,6 @@ export function parseGitHubUrl(url: string) {
   };
 }
 
-export function supportPrompt(platform: string, suffix = 'Supports') {
-  const answer = prompt(`• ${suffix} ${platform}? (y/n)`)?.trim().toLowerCase();
-
-  if (!answer || !['y', 'yes', 'n', 'no'].includes(answer)) {
-    printError(`Incorrect ${platform} support status`);
-    process.exit(1);
-  }
-
-  return answer;
-}
-
 export function getNewArchitectureValue(status: string) {
   switch (status) {
     case 'y':

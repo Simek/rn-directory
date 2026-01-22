@@ -77,7 +77,7 @@ export default async function autoSubmit() {
   };
   const wellFormattedPackageEntry = JSON.parse(JSON.stringify(packageEntry));
 
-  printSummaryAndConfirm(wellFormattedPackageEntry);
+  await printSummaryAndConfirm(wellFormattedPackageEntry);
 
   console.log('');
 
@@ -87,16 +87,16 @@ export default async function autoSubmit() {
   await createBranchInFork(forkRepo, branchName);
 
   const librariesArray = await fetchLibrariesFromForkBranch(forkRepo, branchName);
-  const librayIndex = librariesArray.findIndex(({ githubUrl }) => githubUrl === repositoryUrl);
+  const libraryIndex = librariesArray.findIndex(({ githubUrl }) => githubUrl === repositoryUrl);
 
-  if (librayIndex !== -1) {
+  if (libraryIndex !== -1) {
     console.log(`Replacing already existing entry in the definitions file on the branch`);
-    librariesArray[librayIndex] = JSON.parse(JSON.stringify(wellFormattedPackageEntry));
+    librariesArray[libraryIndex] = JSON.parse(JSON.stringify(wellFormattedPackageEntry));
   } else {
     librariesArray.push(JSON.parse(JSON.stringify(wellFormattedPackageEntry)));
   }
 
-  const message = librayIndex === -1 ? `Add ${packageName} to the directory` : `Update ${packageName} entry`;
+  const message = libraryIndex === -1 ? `Add ${packageName} to the directory` : `Update ${packageName} entry`;
 
   await createAndPushCommit(forkRepo, branchName, librariesArray, message);
 
