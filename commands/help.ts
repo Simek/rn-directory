@@ -1,7 +1,8 @@
-import { log } from '@clack/prompts';
+import { intro, log, outro } from '@clack/prompts';
 
 export default function help() {
-  log.info(`rnd-cli <command> [options]
+  intro('React Native Directory CLI [help]');
+  log.info(`rnd-cli <command>
 
 Commands:
   submit      manually create a PR in React Native Directory
@@ -9,6 +10,6 @@ Commands:
   help        show this help
 
 Examples:
-  rnd-cli submit
-`);
+  rnd-cli submit`);
+  outro();
 }

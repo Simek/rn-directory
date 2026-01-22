@@ -17,7 +17,9 @@ import { checkGHCLIAvailability, checkPresenceInRegistries } from './common/chec
 export default async function submit() {
   await checkGHCLIAvailability();
 
-  intro("👋  Let's gather the information needed to submit new package to https://reactnative.directory/");
+  intro('React Native Directory CLI [submit]');
+
+  log.info("Let's gather the information needed to submit new package to https://reactnative.directory/");
 
   let repositoryUrl = await text({
     message: 'GitHub URL:',

@@ -1,6 +1,6 @@
 #! /usr/bin/env bun
 
-import { log } from '@clack/prompts';
+import { cancel, intro, isCancel, log, outro, select } from '@clack/prompts';
 
 import autoSubmit from '~/commands/autoSubmit.ts';
 import help from '~/commands/help.ts';
@@ -16,10 +16,33 @@ const commands: Record<string, Command> = {
 
 async function main() {
   const argv = process.argv.slice(2);
-  const cmd = argv[0];
+  let cmd: string | symbol | undefined = argv[0];
 
-  // TODO: if no command show command selector
-  if (!cmd || cmd === '-h' || cmd === '--help') {
+  if (!cmd) {
+    intro('React Native Directory CLI');
+
+    cmd = await select({
+      message: 'Select the command to run',
+      options: [
+        { value: 'submit', label: 'Submit', hint: 'Submit new entry to the directory by filling up the fields manually.' },
+        {
+          value: 'autoSubmit',
+          label: 'Auto-submit',
+          hint: 'Gather information about package in the current directory and prepare entry to submit.',
+        },
+        { value: 'help', label: 'Help and usage' },
+      ],
+    });
+
+    if (isCancel(cmd)) {
+      cancel('No command has been selected.');
+      process.exit(0);
+    }
+
+    outro();
+  }
+
+  if (cmd === '-h' || cmd === '--help') {
     help();
     process.exit(0);
   }
