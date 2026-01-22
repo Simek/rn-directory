@@ -115,7 +115,7 @@ This PR adds \`${packageName}\` (${repositoryUrl}) package to the directory.
   );
 
   const creationResponse =
-    await $`gh pr create -R ${BASE_REPO} --head ${forkRepo.split('/')[0]}:${branchName} --base main --title "${message}" --body-file pr.md --dry-run`.quiet();
+    await $`gh pr create -R ${BASE_REPO} --head ${forkRepo.split('/')[0]}:${branchName} --base main --title "${message}" --body-file pr.md`.quiet();
 
   log.info(creationResponse.stdout.toString());
 
