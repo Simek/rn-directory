@@ -1,7 +1,8 @@
+import { cancel, intro, log, spinner } from '@clack/prompts';
 import { $ } from 'bun';
 
 import { type LibraryDataEntryType, type PackageJsonRepository } from '~/types';
-import { directoryExist, isValidGHUrl, parseGitHubUrl, parseRepositoryData, printError } from '~/utils';
+import { directoryExist, isValidGHUrl, parseGitHubUrl, parseRepositoryData } from '~/utils';
 
 import {
   createAndPushCommit,
@@ -19,26 +20,26 @@ export default async function autoSubmit() {
   const packageJson = Bun.file('./package.json');
 
   if (!(await packageJson.exists())) {
-    printError('You need to run the command inside the library repository, where `package.json` file is located');
+    cancel('You need to run the command inside the library repository, where `package.json` file is located');
     process.exit(1);
   }
 
   const packageJsonContent = await packageJson.json();
   const packageName = packageJsonContent.name;
 
-  console.log(`Starting process to submit \`${packageName}\` to the directory`);
+  intro(`👋  Starting process to auto-submit \`${packageName}\` to https://reactnative.directory/`);
 
   await checkPresenceInRegistries(packageName);
 
   if (packageJsonContent.private) {
-    printError('You cannot submit package which is marked as private');
+    cancel('You cannot submit package which is marked as private');
     process.exit(1);
   }
 
   const repositoryData: PackageJsonRepository = packageJsonContent.repository;
 
   if (!repositoryData) {
-    printError(
+    cancel(
       'You need to define the repository data inside `package.json` file, see: https://docs.npmjs.com/cli/v11/configuring-npm/package-json#repository'
     );
     process.exit(1);
@@ -47,7 +48,7 @@ export default async function autoSubmit() {
   const repositoryUrl = parseRepositoryData(repositoryData);
 
   if (!repositoryUrl || !isValidGHUrl(repositoryUrl)) {
-    printError(`Invalid repository URL (${repositoryUrl}), see: https://docs.npmjs.com/cli/v11/configuring-npm/package-json#repository`);
+    cancel(`Invalid repository URL (${repositoryUrl}), see: https://docs.npmjs.com/cli/v11/configuring-npm/package-json#repository`);
     process.exit(1);
   }
 
@@ -56,8 +57,8 @@ export default async function autoSubmit() {
     await $`gh repo view ${repoOwner}/${repoName}`.quiet();
   } catch (error) {
     if (error instanceof $.ShellError) {
-      console.error(error.stderr.toString().replace('GraphQL: ', '').replace('gh: ', '').trim());
-      printError('Make sure that provided URL is correct, repository exist and is publicly available');
+      log.error(error.stderr.toString().replace('GraphQL: ', '').replace('gh: ', '').trim());
+      cancel('Make sure that provided URL is correct, repository exist and is publicly available');
       process.exit(1);
     }
   }
@@ -69,28 +70,40 @@ export default async function autoSubmit() {
     githubUrl: repositoryUrl,
     examples: directoryExist('example') ? [`${repositoryUrl}/tree/HEAD/example`] : undefined,
     configPlugin: hasPluginFile ? true : undefined,
-    ios: directoryExist('ios') || directoryExist('apple'),
-    android: directoryExist('android'),
-    macos: directoryExist('macos') || directoryExist('apple'),
-    tvos: directoryExist('tvos') || directoryExist('apple'),
-    windows: directoryExist('windows'),
+    ios: directoryExist('ios') || directoryExist('apple') ? true : undefined,
+    android: directoryExist('android') ? true : undefined,
+    macos: directoryExist('macos') || directoryExist('apple') ? true : undefined,
+    tvos: directoryExist('tvos') || directoryExist('apple') ? true : undefined,
+    windows: directoryExist('windows') ? true : undefined,
   };
   const wellFormattedPackageEntry = JSON.parse(JSON.stringify(packageEntry));
 
+  // TODO: ask user if they want to correct entry
   await printSummaryAndConfirm(wellFormattedPackageEntry);
 
-  console.log('');
+  const forkingProgress = spinner();
+  forkingProgress.start('Forking repository');
 
   const forkRepo = await forkRNDRepo();
-  const branchName = `add-${packageName}`;
 
+  forkingProgress.stop('Repository has been forked');
+
+  const branchProgress = spinner();
+  branchProgress.start('Creating branch in the fork');
+
+  const branchName = `add-${packageName}`;
   await createBranchInFork(forkRepo, branchName);
+
+  branchProgress.stop('Branch created in the fork');
+
+  const commitProgress = spinner();
+  commitProgress.start('Creating commit and pushing');
 
   const librariesArray = await fetchLibrariesFromForkBranch(forkRepo, branchName);
   const libraryIndex = librariesArray.findIndex(({ githubUrl }) => githubUrl === repositoryUrl);
 
   if (libraryIndex !== -1) {
-    console.log(`Replacing already existing entry in the definitions file on the branch`);
+    log.warn(`Replacing already existing entry in the definitions file on the branch`);
     librariesArray[libraryIndex] = JSON.parse(JSON.stringify(wellFormattedPackageEntry));
   } else {
     librariesArray.push(JSON.parse(JSON.stringify(wellFormattedPackageEntry)));
@@ -100,7 +113,12 @@ export default async function autoSubmit() {
 
   await createAndPushCommit(forkRepo, branchName, librariesArray, message);
 
-  console.log('');
+  commitProgress.stop('Commit created and pushed');
+
+  const prProgress = spinner();
+  prProgress.start('Creating PR in React Native Directory repository');
 
   await createPRForRND(forkRepo, branchName, message, packageName, repositoryUrl);
+
+  prProgress.stop('PR in React Native Directory has been created, thanks!');
 }

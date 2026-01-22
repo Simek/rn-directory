@@ -1,3 +1,5 @@
+import { log } from '@clack/prompts';
+
 import { type PackageJsonRepository } from '~/types';
 
 export function directoryExist(path: string) {
@@ -9,7 +11,7 @@ export function parseRepositoryData(data: PackageJsonRepository) {
     if (data.startsWith('github:')) {
       return `https://github.com/${data.replace('github:', '')}`;
     }
-    console.error('Currently only GitHub hosted packages are supported in the directory');
+    log.error('Currently only GitHub hosted packages are supported in the directory');
     return undefined;
   }
 
@@ -37,10 +39,8 @@ export function parseGitHubUrl(url: string) {
 
 export function getNewArchitectureValue(status: string) {
   switch (status) {
-    case 'y':
     case 'yes':
       return true;
-    case 'n':
     case 'no':
       return false;
     case 'only':
@@ -53,14 +53,10 @@ export function getNewArchitectureValue(status: string) {
 export function getConfigPluginValue(configPlugin: string) {
   if (configPlugin.startsWith('https://github.com')) {
     return configPlugin;
-  } else if (['y', 'yes'].includes(configPlugin)) {
+  } else if (configPlugin === 'yes') {
     return true;
   }
   return undefined;
-}
-
-export function printError(error: string) {
-  console.error(`\n❌ ${error}`);
 }
 
 export function isValidUrl(url: string) {

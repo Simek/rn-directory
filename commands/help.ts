@@ -1,6 +1,7 @@
+import { log } from '@clack/prompts';
+
 export default function help() {
-  console.log(`
-rnd-cli <command> [options]
+  log.info(`rnd-cli <command> [options]
 
 Commands:
   submit      manually create a PR in React Native Directory

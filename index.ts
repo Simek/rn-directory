@@ -1,5 +1,7 @@
 #! /usr/bin/env bun
 
+import { log } from '@clack/prompts';
+
 import autoSubmit from '~/commands/autoSubmit.ts';
 import help from '~/commands/help.ts';
 import submit from '~/commands/submit.ts';
@@ -16,15 +18,16 @@ async function main() {
   const argv = process.argv.slice(2);
   const cmd = argv[0];
 
+  // TODO: if no command show command selector
   if (!cmd || cmd === '-h' || cmd === '--help') {
     help();
-    process.exit(cmd ? 0 : 1);
+    process.exit(0);
   }
 
   const handler = commands[cmd];
 
   if (!handler) {
-    console.error(`Unknown command: ${cmd}`);
+    log.error(`Unknown command: ${cmd}`);
     help();
     process.exit(1);
   }
@@ -33,6 +36,6 @@ async function main() {
 }
 
 main().catch(err => {
-  console.error(err);
+  log.error(err);
   process.exit(1);
 });

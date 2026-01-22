@@ -290,5 +290,5 @@ export default async function submit() {
 
   await createPRForRND(forkRepo, branchName, message, packageName, repositoryUrl);
 
-  prProgress.stop('PR has been created, thanks!');
+  prProgress.stop('PR in React Native Directory has been created, thanks!');
 }
