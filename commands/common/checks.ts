@@ -1,11 +1,19 @@
 import { cancel, log } from '@clack/prompts';
 import { $ } from 'bun';
+import { red } from 'picocolors';
 
 export async function checkGHCLIAvailability() {
   try {
-    await $`gh --version`.quiet();
-  } catch (_) {
-    cancel('GitHub CLI need to be installed on your system, see: https://cli.github.com/.');
+    await $`gh auth status`.quiet();
+  } catch (error) {
+    if (error instanceof $.ShellError) {
+      const message = error.stderr.toString();
+      if (message.includes('You are not logged')) {
+        log.error(red(message));
+      } else {
+        log.error(red('GitHub CLI need to be installed on your system, see: https://cli.github.com/.'));
+      }
+    }
     process.exit(1);
   }
 }
