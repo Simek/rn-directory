@@ -1,7 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["import", "promise", "typescript", "unicorn"],
-  "ignorePatterns": ["**/node_modules"],
   "rules": {
     "curly": "error",
     "eqeqeq": [

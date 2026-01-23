@@ -2,8 +2,7 @@
 node_modules
 
 # output
-out
-dist
+bin
 *.tgz
 
 # dotenv environment variable files

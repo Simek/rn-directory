@@ -11,7 +11,8 @@ export async function forkRNDRepo() {
   let forkRepo;
 
   if (forkCreationResult.stderr.toString().length > 0) {
-    forkRepo = forkCreationResult.stderr.toString().match(/([^/\s]+\/[^/\s]+)(?=\s+already exists\b)/)?.[1] ?? undefined;
+    forkRepo =
+      forkCreationResult.stderr.toString().match(/([^/\s]+\/[^/\s]+)(?=\s+already exists\b)/)?.[1] ?? undefined;
     log.warn(`${forkRepo} already exists`);
   } else if (forkCreationResult.stdout.toString().length > 0) {
     forkRepo = forkCreationResult.stdout.toString().match(/(?<=Created fork\s)([^/\s]+\/[^/\s]+)/)?.[1] ?? undefined;
@@ -46,7 +47,8 @@ export async function createBranchInFork(forkRepo: string, branchName: string) {
 }
 
 export async function fetchLibrariesFromForkBranch(forkRepo: string, branchName: string) {
-  const librariesJsonContent = await $`gh api repos/${forkRepo}/contents/${LIBRARIES_FILE}?ref=${branchName} -q .content`.text();
+  const librariesJsonContent =
+    await $`gh api repos/${forkRepo}/contents/${LIBRARIES_FILE}?ref=${branchName} -q .content`.text();
   return JSON.parse(atob(librariesJsonContent)) as LibraryDataEntryType[];
 }
 
@@ -67,8 +69,15 @@ export async function printSummaryAndConfirm(packageEntry: LibraryDataEntryType)
   }
 }
 
-export async function createAndPushCommit(forkRepo: string, branchName: string, librariesArray: LibraryDataEntryType[], message: string) {
-  const librariesJsonSHA = (await $`gh api repos/${forkRepo}/contents/${LIBRARIES_FILE}?ref=${branchName} -q .sha`.text()).trim();
+export async function createAndPushCommit(
+  forkRepo: string,
+  branchName: string,
+  librariesArray: LibraryDataEntryType[],
+  message: string
+) {
+  const librariesJsonSHA = (
+    await $`gh api repos/${forkRepo}/contents/${LIBRARIES_FILE}?ref=${branchName} -q .sha`.text()
+  ).trim();
 
   await Bun.write(LIBRARIES_FILE, JSON.stringify(librariesArray, null, 2));
   await Bun.write(OXFMT_TMP_CONFIG, JSON.stringify({}));
@@ -98,7 +107,13 @@ export async function createAndPushCommit(forkRepo: string, branchName: string, 
   await tempCommitFile.delete();
 }
 
-export async function createPRForRND(forkRepo: string, branchName: string, message: string, packageName: string, repositoryUrl: string) {
+export async function createPRForRND(
+  forkRepo: string,
+  branchName: string,
+  message: string,
+  packageName: string,
+  repositoryUrl: string
+) {
   await Bun.write(
     'pr.md',
     `# 📝 Why & how

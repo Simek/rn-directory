@@ -24,7 +24,11 @@ async function main() {
     cmd = await select({
       message: 'Select the command to run',
       options: [
-        { value: 'submit', label: 'Submit', hint: 'Submit new entry to the directory by filling up the fields manually.' },
+        {
+          value: 'submit',
+          label: 'Submit',
+          hint: 'Submit new entry to the directory by filling up the fields manually.',
+        },
         {
           value: 'autoSubmit',
           label: 'Auto-submit',

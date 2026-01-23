@@ -59,7 +59,8 @@ export default async function submit() {
 
   try {
     if (isMonorepo) {
-      packageJsonResponse = await $`gh api /repos/${repoOwner}/${repoName}/contents/${packagePath}/package.json -q .content`.quiet();
+      packageJsonResponse =
+        await $`gh api /repos/${repoOwner}/${repoName}/contents/${packagePath}/package.json -q .content`.quiet();
     } else {
       packageJsonResponse = await $`gh api /repos/${repoOwner}/${repoName}/contents/package.json -q .content`.quiet();
     }
@@ -155,7 +156,11 @@ export default async function submit() {
     options: [
       { value: 'no', label: 'No' },
       { value: 'yes', label: 'Yes' },
-      { value: 'separate', label: 'Outside package repository', hint: 'You would need to provide the URL in next step' },
+      {
+        value: 'separate',
+        label: 'Outside package repository',
+        hint: 'You would need to provide the URL in next step',
+      },
     ],
   });
 

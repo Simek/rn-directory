@@ -7,11 +7,16 @@
   "license": "MIT",
   "repository": "github:simek/rnd-cli",
   "bin": {
-    "rnd-cli": "./index.ts"
+    "rnd-cli": "./bin/cli.js"
   },
+  "files": [
+    "bin"
+  ],
   "type": "module",
   "module": "index.ts",
   "scripts": {
+    "package": "bun build ./index.ts --outfile ./bin/cli.js --target bun",
+    "prepublishOnly": "bun package",
     "lint": "oxlint --type-aware && oxfmt --check",
     "lint:fix": "oxlint --type-aware --fix && oxfmt"
   },

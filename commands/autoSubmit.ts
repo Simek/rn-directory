@@ -50,7 +50,9 @@ export default async function autoSubmit() {
   const repositoryUrl = parseRepositoryData(repositoryData);
 
   if (!repositoryUrl || !isValidGHUrl(repositoryUrl)) {
-    cancel(`Invalid repository URL (${repositoryUrl}), see: https://docs.npmjs.com/cli/v11/configuring-npm/package-json#repository.`);
+    cancel(
+      `Invalid repository URL (${repositoryUrl}), see: https://docs.npmjs.com/cli/v11/configuring-npm/package-json#repository.`
+    );
     process.exit(1);
   }
 
