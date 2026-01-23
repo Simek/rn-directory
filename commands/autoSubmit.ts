@@ -1,5 +1,6 @@
 import { cancel, intro, log, outro, spinner } from '@clack/prompts';
 import { $ } from 'bun';
+import { blue, bold } from 'picocolors';
 
 import { type LibraryDataEntryType, type PackageJsonRepository } from '~/types';
 import { directoryExist, isValidGHUrl, parseGitHubUrl, parseRepositoryData } from '~/utils';
@@ -20,16 +21,16 @@ export default async function autoSubmit() {
   const packageJson = Bun.file('./package.json');
 
   if (!(await packageJson.exists())) {
-    cancel('You need to run the command inside the library repository, where `package.json` file is located.');
+    cancel(`You need to run the command inside the library repository, where ${bold('package.json')} file is located.`);
     process.exit(1);
   }
 
   const packageJsonContent = await packageJson.json();
   const packageName = packageJsonContent.name;
 
-  intro('React Native Directory CLI [autoSubmit]');
+  intro(`${blue('React Native Directory CLI')} ${blue(bold('[autoSubmit]'))}`);
 
-  log.info(`Starting process to auto-submit \`${packageName}\` to https://reactnative.directory/`);
+  log.info(`Starting process to auto-submit ${bold(packageName)} to https://reactnative.directory/`);
 
   await checkPresenceInRegistries(packageName);
 
@@ -42,7 +43,7 @@ export default async function autoSubmit() {
 
   if (!repositoryData) {
     cancel(
-      'You need to define the repository data inside `package.json` file, see: https://docs.npmjs.com/cli/v11/configuring-npm/package-json#repository.'
+      `You need to define the repository data inside ${bold('package.json')} file, see: https://docs.npmjs.com/cli/v11/configuring-npm/package-json#repository.`
     );
     process.exit(1);
   }
@@ -126,5 +127,5 @@ export default async function autoSubmit() {
 
   prProgress.stop('PR in React Native Directory has been created');
 
-  outro('Thanks for contributing! 💙');
+  outro(blue('Thanks for contributing! 💙'));
 }

@@ -1,5 +1,6 @@
 import { cancel, intro, isCancel, log, multiselect, outro, select, spinner, text } from '@clack/prompts';
 import { $ } from 'bun';
+import { blue, bold } from 'picocolors';
 
 import { type LibraryDataEntryType } from '~/types.ts';
 import {
@@ -26,7 +27,7 @@ import { checkGHCLIAvailability, checkPresenceInRegistries } from './common/chec
 export default async function submit() {
   await checkGHCLIAvailability();
 
-  intro('React Native Directory CLI [submit]');
+  intro(`${blue('React Native Directory CLI')} ${blue(bold('[submit]'))}`);
 
   log.info("Let's gather the information needed to submit new package to https://reactnative.directory/");
 
@@ -73,7 +74,7 @@ export default async function submit() {
   }
 
   if (!packageJsonResponse) {
-    cancel('Cannot fetch `package.json` file from the repository.');
+    cancel(`Cannot fetch ${bold('package.json')} file from the repository.`);
     process.exit(1);
   }
 
@@ -288,5 +289,5 @@ export default async function submit() {
 
   prProgress.stop('PR in React Native Directory has been created');
 
-  outro('Thanks for contributing! 💙');
+  outro(blue('Thanks for contributing! 💙'));
 }

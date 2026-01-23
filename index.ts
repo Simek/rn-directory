@@ -1,6 +1,7 @@
 #! /usr/bin/env bun
 
 import { cancel, intro, isCancel, log, outro, select } from '@clack/prompts';
+import { blue, bold } from 'picocolors';
 
 import autoSubmit from '~/commands/autoSubmit.ts';
 import help from '~/commands/help.ts';
@@ -19,7 +20,7 @@ async function main() {
   let cmd: string | symbol | undefined = argv[0];
 
   if (!cmd) {
-    intro('React Native Directory CLI');
+    intro(blue(`React Native Directory CLI`));
 
     cmd = await select({
       message: 'Select the command to run',
@@ -54,7 +55,7 @@ async function main() {
   const handler = commands[cmd];
 
   if (!handler) {
-    log.error(`Unknown command: ${cmd}`);
+    log.error(`Unknown command: ${bold(cmd)}\n`);
     help();
     process.exit(1);
   }
