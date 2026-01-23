@@ -1,11 +1,15 @@
-import { cancel, isCancel, log, select } from '@clack/prompts';
+import { cancel, isCancel, log, select, spinner } from '@clack/prompts';
 import { $ } from 'bun';
 
 import { type LibraryDataEntryType } from '~/types.ts';
+import { deleteFile } from '~/utils.ts';
 
 import { BASE_REPO, LIBRARIES_FILE, OXFMT_TMP_CONFIG } from './constants';
 
 export async function forkRNDRepo() {
+  const progress = spinner();
+  progress.start('Forking repository');
+
   const forkCreationResult = await $`gh repo fork ${BASE_REPO} --clone=false --default-branch-only`.quiet();
 
   let forkRepo;
@@ -23,10 +27,15 @@ export async function forkRNDRepo() {
     process.exit(1);
   }
 
+  progress.stop('Repository has been forked');
+
   return forkRepo;
 }
 
 export async function createBranchInFork(forkRepo: string, branchName: string) {
+  const progress = spinner();
+  progress.start('Creating branch in the fork');
+
   const forkSHA = (await $`gh api repos/${forkRepo}/git/ref/heads/main -q .object.sha`.text()).trim();
 
   try {
@@ -44,6 +53,8 @@ export async function createBranchInFork(forkRepo: string, branchName: string) {
       process.exit(1);
     }
   }
+
+  progress.stop('Branch created in the fork');
 }
 
 export async function fetchLibrariesFromForkBranch(forkRepo: string, branchName: string) {
@@ -100,11 +111,8 @@ export async function createAndPushCommit(
 
   await tempLibrariesFile.delete();
 
-  const tempOxfmtConfig = Bun.file(OXFMT_TMP_CONFIG);
-  await tempOxfmtConfig.delete();
-
-  const tempCommitFile = Bun.file('commit.json');
-  await tempCommitFile.delete();
+  await deleteFile(OXFMT_TMP_CONFIG);
+  await deleteFile('commit.json');
 }
 
 export async function createPRForRND(
@@ -114,6 +122,9 @@ export async function createPRForRND(
   packageName: string,
   repositoryUrl: string
 ) {
+  const progress = spinner();
+  progress.start('Creating PR in React Native Directory repository');
+
   await Bun.write(
     'pr.md',
     `# 📝 Why & how
@@ -134,6 +145,7 @@ This PR adds \`${packageName}\` (${repositoryUrl}) package to the directory.
 
   log.info(creationResponse.stdout.toString());
 
-  const tempPRBodyFile = Bun.file('pr.md');
-  await tempPRBodyFile.delete();
+  await deleteFile('pr.md');
+
+  progress.stop('PR in React Native Directory has been created');
 }

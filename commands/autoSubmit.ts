@@ -32,12 +32,12 @@ export default async function autoSubmit() {
 
   log.info(`Starting process to auto-submit ${bold(packageName)} to https://reactnative.directory/`);
 
-  await checkPresenceInRegistries(packageName);
-
   if (packageJsonContent.private) {
     cancel('You cannot submit package which is marked as private.');
     process.exit(1);
   }
+
+  await checkPresenceInRegistries(packageName);
 
   const repositoryData: PackageJsonRepository = packageJsonContent.repository;
 
@@ -81,25 +81,14 @@ export default async function autoSubmit() {
     tvos: directoryExist('tvos') || directoryExist('apple') ? true : undefined,
     windows: directoryExist('windows') ? true : undefined,
   };
-  const wellFormattedPackageEntry = JSON.parse(JSON.stringify(packageEntry));
 
   // TODO: ask user if they want to correct entry
-  await printSummaryAndConfirm(wellFormattedPackageEntry);
-
-  const forkingProgress = spinner();
-  forkingProgress.start('Forking repository');
+  await printSummaryAndConfirm(packageEntry);
 
   const forkRepo = await forkRNDRepo();
 
-  forkingProgress.stop('Repository has been forked');
-
-  const branchProgress = spinner();
-  branchProgress.start('Creating branch in the fork');
-
   const branchName = `add-${packageName}`;
   await createBranchInFork(forkRepo, branchName);
-
-  branchProgress.stop('Branch created in the fork');
 
   const commitProgress = spinner();
   commitProgress.start('Creating commit and pushing');
@@ -109,9 +98,9 @@ export default async function autoSubmit() {
 
   if (libraryIndex !== -1) {
     log.warn(`Replacing already existing entry in the definitions file on the branch`);
-    librariesArray[libraryIndex] = JSON.parse(JSON.stringify(wellFormattedPackageEntry));
+    librariesArray[libraryIndex] = JSON.parse(JSON.stringify(packageEntry));
   } else {
-    librariesArray.push(JSON.parse(JSON.stringify(wellFormattedPackageEntry)));
+    librariesArray.push(JSON.parse(JSON.stringify(packageEntry)));
   }
 
   const message = libraryIndex === -1 ? `Add ${packageName} to the directory` : `Update ${packageName} entry`;
@@ -120,12 +109,7 @@ export default async function autoSubmit() {
 
   commitProgress.stop('Commit created and pushed');
 
-  const prProgress = spinner();
-  prProgress.start('Creating PR in React Native Directory repository');
-
   await createPRForRND(forkRepo, branchName, message, packageName, repositoryUrl);
-
-  prProgress.stop('PR in React Native Directory has been created');
 
   outro(blue('Thanks for contributing! 💙'));
 }

@@ -244,24 +244,13 @@ export default async function submit() {
     horizon: compatibility.includes('horizon') ? true : undefined,
     vegaos: compatibility.includes('vegaos') ? true : undefined,
   };
-  const wellFormattedPackageEntry = JSON.parse(JSON.stringify(packageEntry));
 
-  await printSummaryAndConfirm(wellFormattedPackageEntry);
-
-  const forkingProgress = spinner();
-  forkingProgress.start('Forking repository');
+  await printSummaryAndConfirm(packageEntry);
 
   const forkRepo = await forkRNDRepo();
 
-  forkingProgress.stop('Repository has been forked');
-
-  const branchProgress = spinner();
-  branchProgress.start('Creating branch in the fork');
-
   const branchName = `add-${packageName}`;
   await createBranchInFork(forkRepo, branchName);
-
-  branchProgress.stop('Branch created in the fork');
 
   const commitProgress = spinner();
   commitProgress.start('Creating commit and pushing');
@@ -271,9 +260,9 @@ export default async function submit() {
 
   if (libraryIndex !== -1) {
     log.warn(`Replacing already existing entry in the definitions file on the branch`);
-    librariesArray[libraryIndex] = wellFormattedPackageEntry;
+    librariesArray[libraryIndex] = packageEntry;
   } else {
-    librariesArray.push(JSON.parse(JSON.stringify(wellFormattedPackageEntry)));
+    librariesArray.push(JSON.parse(JSON.stringify(packageEntry)));
   }
 
   const message = libraryIndex === -1 ? `Add ${packageName} to the directory` : `Update ${packageName} entry`;
@@ -282,12 +271,7 @@ export default async function submit() {
 
   commitProgress.stop('Commit created and pushed');
 
-  const prProgress = spinner();
-  prProgress.start('Creating PR in React Native Directory repository');
-
   await createPRForRND(forkRepo, branchName, message, packageName, repositoryUrl);
-
-  prProgress.stop('PR in React Native Directory has been created');
 
   outro(blue('Thanks for contributing! 💙'));
 }

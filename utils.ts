@@ -6,12 +6,17 @@ export function directoryExist(path: string) {
   return !!Array.from(new Bun.Glob(path).scanSync({ onlyFiles: false }))[0];
 }
 
+export async function deleteFile(filename: string) {
+  const tempFile = Bun.file(filename);
+  await tempFile.delete();
+}
+
 export function parseRepositoryData(data: PackageJsonRepository) {
   if (typeof data === 'string') {
     if (data.startsWith('github:')) {
       return `https://github.com/${data.replace('github:', '')}`;
     }
-    log.error('Currently only GitHub hosted packages are supported in the directory');
+    log.error('Currently only GitHub hosted packages are supported in the directory.');
     return undefined;
   }
 
