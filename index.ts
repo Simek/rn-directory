@@ -1,7 +1,7 @@
 #! /usr/bin/env bun
 
 import { cancel, intro, isCancel, log, outro, select } from '@clack/prompts';
-import { blue, bold } from 'picocolors';
+import { blue, bold, yellow } from 'picocolors';
 
 import autoSubmit from '~/commands/autoSubmit.ts';
 import help from '~/commands/help.ts';
@@ -32,7 +32,7 @@ async function main() {
         },
         {
           value: 'autoSubmit',
-          label: 'Auto-submit',
+          label: `Auto-submit ${yellow(bold('[Experimental]'))}`,
           hint: 'Gather information about package in the current directory and prepare entry to submit.',
         },
         { value: 'help', label: 'Help and usage' },

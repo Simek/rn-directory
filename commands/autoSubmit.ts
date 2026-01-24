@@ -70,20 +70,21 @@ export default async function autoSubmit() {
 
   const hasPluginFile = await Bun.file('app.plugin.js').exists();
 
-  // TODO: cleanup and improve entry
+  // TODO: improve entry
   const packageEntry: LibraryDataEntryType = {
     githubUrl: repositoryUrl,
     examples: directoryExist('example') ? [`${repositoryUrl}/tree/HEAD/example`] : undefined,
     configPlugin: hasPluginFile ? true : undefined,
     ios: directoryExist('ios') || directoryExist('apple') ? true : undefined,
     android: directoryExist('android') ? true : undefined,
+    expoGo: !directoryExist('android') && !directoryExist('ios') && !directoryExist('apple') ? true : undefined,
     macos: directoryExist('macos') || directoryExist('apple') ? true : undefined,
     tvos: directoryExist('tvos') || directoryExist('apple') ? true : undefined,
     windows: directoryExist('windows') ? true : undefined,
   };
 
-  // TODO: ask user if they want to correct entry
-  await printSummaryAndConfirm(packageEntry);
+  // TODO: maybe ask user if they want to correct entry
+  await printSummaryAndConfirm(packageEntry, true);
 
   const forkRepo = await forkRNDRepo();
 
