@@ -20,10 +20,12 @@ export function parseRepositoryData(data: PackageJsonRepository) {
     return undefined;
   }
 
+  const cleanGitHubUrl = data.url.replace('git+', '').replace('.git', '');
+
   if ('directory' in data) {
-    return `${data.url.replace('git+', '').replace('.git', '')}/tree/HEAD/${data.directory}`;
+    return `${cleanGitHubUrl}/tree/HEAD/${data.directory}`;
   }
-  return data.url.replace('git+', '').replace('.git', '');
+  return cleanGitHubUrl;
 }
 
 export function parseGitHubUrl(url: string) {
