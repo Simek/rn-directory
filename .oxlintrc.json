@@ -55,8 +55,7 @@
     "import/no-cycle": [
       "error",
       {
-        "maxDepth": 3,
-        "disableScc": true
+        "maxDepth": 3
       }
     ],
     "import/no-duplicates": "error",

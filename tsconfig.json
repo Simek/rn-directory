@@ -13,9 +13,6 @@
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "paths": {
-      "~/*": ["./*"]
-    }
+    "noImplicitOverride": true
   }
 }

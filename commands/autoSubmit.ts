@@ -2,8 +2,8 @@ import { cancel, intro, log, outro, spinner } from '@clack/prompts';
 import { $ } from 'bun';
 import { blue, bold } from 'picocolors';
 
-import { type LibraryDataEntryType, type PackageJsonRepository } from '~/types';
-import { directoryExist, isValidGHUrl, parseGitHubUrl, parseRepositoryData } from '~/utils';
+import { type LibraryDataEntryType, type PackageJsonRepository } from '../types';
+import { directoryExist, isValidGHUrl, parseGitHubUrl, parseRepositoryData } from '../utils';
 
 import {
   createAndPushCommit,

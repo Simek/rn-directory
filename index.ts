@@ -3,10 +3,9 @@
 import { cancel, intro, isCancel, log, outro, select } from '@clack/prompts';
 import { blue, bold, yellow } from 'picocolors';
 
-import autoSubmit from '~/commands/autoSubmit.ts';
-import help from '~/commands/help.ts';
-import submit from '~/commands/submit.ts';
-
+import autoSubmit from './commands/autoSubmit.ts';
+import help from './commands/help.ts';
+import submit from './commands/submit.ts';
 import { type Command } from './types';
 
 const commands: Record<string, Command> = {

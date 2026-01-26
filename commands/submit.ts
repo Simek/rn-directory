@@ -2,7 +2,7 @@ import { cancel, intro, isCancel, log, multiselect, outro, select, spinner, text
 import { $ } from 'bun';
 import { blue, bold } from 'picocolors';
 
-import { type LibraryDataEntryType } from '~/types.ts';
+import { type LibraryDataEntryType } from '../types.ts';
 import {
   getConfigPluginValue,
   getNewArchitectureValue,
@@ -12,7 +12,7 @@ import {
   isValidUrl,
   parseGitHubUrl,
   validateUrlsListString,
-} from '~/utils';
+} from '../utils';
 
 import {
   createAndPushCommit,
