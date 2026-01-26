@@ -2,8 +2,8 @@ import { cancel, isCancel, log, select, spinner } from '@clack/prompts';
 import { $ } from 'bun';
 import { yellow } from 'picocolors';
 
-import { type LibraryDataEntryType } from '~/types.ts';
-import { deleteFile } from '~/utils.ts';
+import { type LibraryDataEntryType } from '../../types.ts';
+import { deleteFile } from '../../utils.ts';
 
 import { BASE_REPO, LIBRARIES_FILE, OXFMT_TMP_CONFIG } from './constants';
 

@@ -1,6 +1,6 @@
 import { log } from '@clack/prompts';
 
-import { type PackageJsonRepository } from '~/types';
+import { type PackageJsonRepository } from './types';
 
 export function directoryExist(path: string) {
   return !!Array.from(new Bun.Glob(path).scanSync({ onlyFiles: false }))[0];
