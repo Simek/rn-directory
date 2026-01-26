@@ -107,7 +107,7 @@ export default async function submit() {
 
   const examples = await text({
     message: 'Examples URL list:',
-    placeholder: 'separate multiple URLs with comma',
+    placeholder: 'separate multiple URLs with comma, can be empty',
     validate(value) {
       return validateUrlsListString(value, 'The following example URLs are invalid', isValidUrl);
     },
@@ -122,7 +122,7 @@ export default async function submit() {
 
   const images = await text({
     message: 'Images URL list:',
-    placeholder: 'separate multiple URLs with comma, no marketing materials',
+    placeholder: 'separate multiple URLs with comma, no marketing materials, can be empty',
     validate(value) {
       return validateUrlsListString(value, 'The following image URLs are invalid', isValidImageUrl);
     },

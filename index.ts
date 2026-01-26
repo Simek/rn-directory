@@ -28,12 +28,12 @@ async function main() {
         {
           value: 'submit',
           label: 'Submit',
-          hint: 'Submit new entry to the directory by filling up the fields manually.',
+          hint: 'Submit new entry to the directory by filling up the fields manually',
         },
         {
           value: 'autoSubmit',
           label: `Auto-submit ${yellow(bold('[Experimental]'))}`,
-          hint: 'Gather information about package in the current directory and prepare entry to submit.',
+          hint: 'Gather information about package in the current directory and prepare entry to submit',
         },
         { value: 'help', label: 'Help and usage' },
       ],

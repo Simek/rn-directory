@@ -7,8 +7,8 @@ The `rnd-cli` CLI gathers the required information manually or automatically, cr
 
 ## Prerequisites
 
-- Bun
-- GitHub CLI
+- [Bun](https://bun.sh/)
+- [GitHub CLI](https://cli.github.com/)
 
 ## Usage
 
