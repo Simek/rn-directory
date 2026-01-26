@@ -1,22 +1,27 @@
 {
-  "name": "rnd-cli",
+  "name": "rn-directory",
   "version": "0.0.1",
   "bugs": {
-    "url": "https://github.com/simek/rnd-cli/issues"
+    "url": "https://github.com/simek/rn-directory/issues"
   },
   "license": "MIT",
-  "repository": "github:simek/rnd-cli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simek/rn-directory.git"
+  },
   "bin": {
-    "rnd-cli": "./bin/cli.js"
+    "rn-directory": "index.ts"
   },
   "files": [
-    "bin"
+    "commands",
+    "index.ts",
+    "types.ts",
+    "utils.ts"
   ],
   "type": "module",
   "module": "index.ts",
   "scripts": {
-    "package": "bun build ./index.ts --outfile ./bin/cli.js --target bun",
-    "prepublishOnly": "bun package",
+    "dev:prepare": "bun link && bun link rn-directory",
     "lint": "oxlint --type-aware && oxfmt --check",
     "lint:fix": "oxlint --type-aware --fix && oxfmt"
   },

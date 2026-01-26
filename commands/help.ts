@@ -3,7 +3,7 @@ import { blue, bold, dim } from 'picocolors';
 
 export default function help() {
   intro(`${blue('React Native Directory CLI')} ${blue(bold('[help]'))}`);
-  log.info(`rnd-cli <command>
+  log.info(`rn-directory <command>
 
 Commands:
   ${bold('submit')}      ${dim('manually create a PR in React Native Directory')}
@@ -11,6 +11,6 @@ Commands:
   ${bold('help')}        ${dim('show this help')}
 
 Examples:
-  ${bold('rnd-cli submit')}`);
+  ${bold('rn-directory submit')}`);
   outro();
 }

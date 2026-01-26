@@ -141,7 +141,7 @@ export async function createPRForRND(
 This PR adds \`${packageName}\` (${repositoryUrl}) package to the directory.
 
 > [!NOTE]
-> This is an automatic submission created via \`rnd-cli\`.
+> This is an automatic submission created via \`rn-directory\` CLI.
 
 # ✅ Checklist
 
