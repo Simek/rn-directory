@@ -34,7 +34,7 @@ export default async function submit() {
   let repositoryUrl = await text({
     message: 'GitHub URL:',
     validate(value) {
-      if (value.length === 0) {
+      if (!value || value.length === 0) {
         return `GitHub URL is required`;
       } else if (value.includes(' ') || !value.includes('/') || (value.includes('://') && !isValidGHUrl(value))) {
         return `Incorrect GitHub repository URL. Valid formats are:
@@ -90,9 +90,9 @@ export default async function submit() {
     placeholder: packageJsonContent.name,
     defaultValue: packageJsonContent.name,
     validate(value) {
-      if (!packageJsonContent.name && value.length === 0) {
+      if (!packageJsonContent.name && (!value || value.length === 0)) {
         return `Package name is required`;
-      } else if (value.length > 0 && !isValidNpmPackageName(value)) {
+      } else if (value && value.length > 0 && !isValidNpmPackageName(value)) {
         return `Incorrect package name.`;
       }
     },
@@ -175,7 +175,7 @@ export default async function submit() {
     configPluginUrl = await text({
       message: 'Config plugin repository URL:',
       validate(value) {
-        if (value.length === 0) {
+        if (!value || value.length === 0) {
           return `Config plugin repository is required.`;
         } else if (!isValidGHUrl(value)) {
           return `Incorrect repository URL.`;
@@ -217,7 +217,7 @@ export default async function submit() {
       { value: 'horizon', label: 'Meta Horizon OS' },
       { value: 'vegaos', label: 'Vega OS' },
     ],
-    required: true,
+    required: false,
   });
 
   if (isCancel(compatibility)) {

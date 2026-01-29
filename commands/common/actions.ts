@@ -1,4 +1,4 @@
-import { cancel, isCancel, log, select, spinner } from '@clack/prompts';
+import { cancel, confirm, isCancel, log, spinner } from '@clack/prompts';
 import { $ } from 'bun';
 import { yellow } from 'picocolors';
 
@@ -75,15 +75,11 @@ export async function printSummaryAndConfirm(packageEntry: LibraryDataEntryType,
     );
   }
 
-  const continueProcess = await select({
+  const continueProcess = await confirm({
     message: 'Would you like to continue the process?',
-    options: [
-      { value: 'yes', label: 'Yes' },
-      { value: 'no', label: 'No' },
-    ],
   });
 
-  if (isCancel(continueProcess) || continueProcess === 'no') {
+  if (isCancel(continueProcess) || !continueProcess) {
     cancel('Submission cancelled.');
     process.exit(0);
   }

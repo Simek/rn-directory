@@ -66,7 +66,11 @@ export function getConfigPluginValue(configPlugin: string) {
   return undefined;
 }
 
-export function validateUrlsListString(value: string, message: string, validator: (url: string) => boolean) {
+export function validateUrlsListString(
+  value: string | undefined,
+  message: string,
+  validator: (url: string) => boolean
+) {
   if (!value || value.length === 0) {
     return;
   }
