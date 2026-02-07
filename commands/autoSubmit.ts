@@ -16,6 +16,8 @@ import {
 import { checkGHCLIAvailability, checkPresenceInRegistries } from './common/checks';
 
 export default async function autoSubmit() {
+  intro(`${blue('React Native Directory CLI')} ${blue(bold('[autoSubmit]'))}`);
+
   await checkGHCLIAvailability();
 
   const packageJson = Bun.file('./package.json');
@@ -27,8 +29,6 @@ export default async function autoSubmit() {
 
   const packageJsonContent = await packageJson.json();
   const packageName = packageJsonContent.name;
-
-  intro(`${blue('React Native Directory CLI')} ${blue(bold('[autoSubmit]'))}`);
 
   log.info(`Starting process to auto-submit ${bold(packageName)} to https://reactnative.directory/`);
 

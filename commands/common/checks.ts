@@ -1,4 +1,4 @@
-import { cancel, log } from '@clack/prompts';
+import { cancel, confirm, isCancel, log } from '@clack/prompts';
 import { $ } from 'bun';
 import { red } from 'picocolors';
 
@@ -10,11 +10,25 @@ export async function checkGHCLIAvailability() {
       const message = error.stderr.toString();
       if (message.includes('You are not logged')) {
         log.error(red(message));
+
+        const tryLogin = await confirm({
+          message: 'Would you like to login now?',
+        });
+
+        if (isCancel(tryLogin) || !tryLogin) {
+          cancel('GitHub CLI authentication skipped.');
+          process.exit(0);
+        }
+
+        const loginAttempt = await $`gh auth login`;
+        if (loginAttempt.exitCode !== 0) {
+          process.exit(loginAttempt.exitCode);
+        }
       } else {
         log.error(red('GitHub CLI need to be installed on your system, see: https://cli.github.com/.'));
+        process.exit(1);
       }
     }
-    process.exit(1);
   }
 }
 

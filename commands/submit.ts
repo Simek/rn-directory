@@ -25,9 +25,9 @@ import {
 import { checkGHCLIAvailability, checkPresenceInRegistries } from './common/checks';
 
 export default async function submit() {
-  await checkGHCLIAvailability();
-
   intro(`${blue('React Native Directory CLI')} ${blue(bold('[submit]'))}`);
+
+  await checkGHCLIAvailability();
 
   log.info("Let's gather the information needed to submit new package to https://reactnative.directory/");
 
