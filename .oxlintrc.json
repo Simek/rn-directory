@@ -2,22 +2,11 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["import", "promise", "typescript", "unicorn"],
   "rules": {
+    "branches-sharing-code": "error",
     "curly": "error",
-    "eqeqeq": [
-      "error",
-      "always",
-      {
-        "null": "ignore"
-      }
-    ],
+    "eqeqeq": ["error", "always", { "null": "ignore" }],
     "func-style": ["error", "declaration"],
-    "no-unused-expressions": [
-      "error",
-      {
-        "allowShortCircuit": true,
-        "enforceForJSX": true
-      }
-    ],
+    "no-unused-expressions": ["error", { "allowShortCircuit": true, "enforceForJSX": true }],
     "no-unused-vars": [
       "error",
       {
@@ -32,32 +21,15 @@
     "no-useless-concat": "error",
     "no-useless-constructor": "error",
     "no-useless-return": "error",
-    "no-void": [
-      "error",
-      {
-        "allowAsStatement": true
-      }
-    ],
+    "no-void": ["error", { "allowAsStatement": true }],
     "prefer-promise-reject-errors": "error",
     "prefer-rest-params": "error",
     "prefer-spread": "error",
-    "sort-imports": [
-      "error",
-      {
-        "allowSeparatedGroups": true,
-        "ignoreDeclarationSort": true,
-        "ignoreCase": true
-      }
-    ],
+    "sort-imports": ["error", { "allowSeparatedGroups": true, "ignoreDeclarationSort": true, "ignoreCase": true }],
     "import/consistent-type-specifier-style": ["error", "prefer-inline"],
     "import/default": "error",
     "import/namespace": "error",
-    "import/no-cycle": [
-      "error",
-      {
-        "maxDepth": 3
-      }
-    ],
+    "import/no-cycle": ["error", { "maxDepth": 3 }],
     "import/no-duplicates": "error",
     "import/no-named-as-default": "error",
     "import/no-named-as-default-member": "error",
@@ -75,20 +47,10 @@
         "ts-nocheck": true
       }
     ],
-    "typescript/consistent-type-imports": [
-      "error",
-      {
-        "fixStyle": "inline-type-imports"
-      }
-    ],
+    "typescript/consistent-type-imports": ["error", { "fixStyle": "inline-type-imports" }],
     "typescript/no-confusing-non-null-assertion": "error",
     "typescript/no-extra-non-null-assertion": "error",
-    "typescript/no-misused-promises": [
-      "error",
-      {
-        "checksVoidReturn": false
-      }
-    ],
+    "typescript/no-misused-promises": ["error", { "checksVoidReturn": false }],
     "typescript/no-restricted-types": "error",
     "typescript/no-unnecessary-boolean-literal-compare": "error",
     "typescript/no-unnecessary-type-arguments": "error",
@@ -103,6 +65,7 @@
     "unicorn/consistent-date-clone": "error",
     "unicorn/consistent-empty-array-spread": "error",
     "unicorn/consistent-existence-index-check": "error",
+    "unicorn/consistent-indexed-object-style": ["error", "record"],
     "unicorn/error-message": "error",
     "unicorn/no-anonymous-default-export": "error",
     "unicorn/no-immediate-mutation": "error",

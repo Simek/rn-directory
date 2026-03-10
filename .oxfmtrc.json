@@ -6,14 +6,8 @@
   "bracketSameLine": true,
   "trailingComma": "es5",
   "arrowParens": "avoid",
-  "experimentalSortImports": {
-    "groups": [
-      ["side-effect"],
-      ["builtin", "external", "external-type"],
-      ["internal", "internal-type"],
-      ["parent", "parent-type"],
-      ["sibling", "sibling-type"],
-      ["index", "index-type"]
-    ]
+  "sortPackageJson": false,
+  "sortImports": {
+    "groups": [["side_effect"], ["builtin", "external"], ["internal"], ["parent"], ["sibling"], ["index"]]
   }
 }
