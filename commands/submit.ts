@@ -32,7 +32,7 @@ export default async function submit() {
   log.info("Let's gather the information needed to submit new package to https://reactnative.directory/");
 
   let repositoryUrl = await text({
-    message: 'GitHub URL:',
+    message: 'Full GitHub URL or "owner/repo" shorthand:',
     validate(value) {
       if (!value || value.length === 0) {
         return `GitHub URL is required`;
@@ -118,7 +118,9 @@ export default async function submit() {
     process.exit(0);
   }
 
-  const examplesList = examples?.split(',');
+  const examplesList = examples?.split(',').filter(Boolean);
+
+  console.warn('XXX', examples, examplesList);
 
   const images = await text({
     message: 'Images URL list:',
@@ -133,7 +135,7 @@ export default async function submit() {
     process.exit(0);
   }
 
-  const imagesList = images?.split(',');
+  const imagesList = images?.split(',').filter(Boolean);
 
   // TODO: support New Architecture note
   const newArch = await select({
@@ -195,10 +197,10 @@ export default async function submit() {
       { value: 'android', label: 'Android' },
       { value: 'ios', label: 'iOS' },
       { value: 'web', label: 'Web' },
-      { value: 'macos', label: 'macOS', hint: 'Out-of-tree platform' },
-      { value: 'tvos', label: 'tvOS', hint: 'Out-of-tree platform' },
-      { value: 'visionos', label: 'visionOS', hint: 'Out-of-tree platform' },
-      { value: 'windows', label: 'Windows', hint: 'Out-of-tree platform' },
+      { value: 'macos', label: 'macOS', hint: 'Out-of-tree platform, requires an example' },
+      { value: 'tvos', label: 'tvOS', hint: 'Out-of-tree platform, requires an example' },
+      { value: 'visionos', label: 'visionOS', hint: 'Out-of-tree platform, requires an example' },
+      { value: 'windows', label: 'Windows', hint: 'Out-of-tree platform, requires an example' },
     ],
     required: true,
   });
@@ -228,8 +230,8 @@ export default async function submit() {
   const packageEntry: LibraryDataEntryType = {
     githubUrl: repositoryUrl,
     npmPkg: repositoryUrl.split('/').at(-1) !== packageName ? packageName : undefined,
-    examples: examplesList,
-    images: imagesList,
+    examples: examplesList.length > 0 ? examplesList : undefined,
+    images: imagesList.length > 0 ? imagesList : undefined,
     newArchitecture: getNewArchitectureValue(newArch),
     configPlugin: getConfigPluginValue(configPluginUrl ?? configPlugin),
     ios: platforms.includes('ios') ? true : undefined,
