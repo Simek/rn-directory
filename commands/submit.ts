@@ -120,8 +120,6 @@ export default async function submit() {
 
   const examplesList = examples?.split(',').filter(Boolean);
 
-  console.warn('XXX', examples, examplesList);
-
   const images = await text({
     message: 'Images URL list:',
     placeholder: 'separate multiple URLs with comma, no marketing materials, can be empty',

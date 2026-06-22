@@ -30,7 +30,7 @@ export default async function autoSubmit() {
   const packageJsonContent = await packageJson.json();
   const packageName = packageJsonContent.name;
 
-  log.info(`Starting process to auto-submit ${bold(packageName)} to https://reactnative.directory/`);
+  log.info(`Starting process to auto-submit ${bold(packageName)} to https://reactnative.directory/\n`);
 
   if (packageJsonContent.private) {
     cancel('You cannot submit package which is marked as private.');
@@ -82,6 +82,20 @@ export default async function autoSubmit() {
     tvos: directoryExist('tvos') || directoryExist('apple') ? true : undefined,
     windows: directoryExist('windows') ? true : undefined,
   };
+
+  if (
+    !packageEntry.android &&
+    !packageEntry.ios &&
+    !packageEntry.web &&
+    !packageEntry.macos &&
+    !packageEntry.tvos &&
+    !packageEntry.windows
+  ) {
+    cancel(
+      'Cannot submit an entry without at least one supported platform detected. Try manual submit action instead.'
+    );
+    process.exit(1);
+  }
 
   // TODO: maybe ask user if they want to correct entry
   await printSummaryAndConfirm(packageEntry, true);
