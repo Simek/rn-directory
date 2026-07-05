@@ -139,6 +139,7 @@ export default async function submit() {
   const newArch = await select({
     message: 'Supports New Architecture?',
     initialValue: 'untested',
+    showInstructions: false,
     options: [
       { value: 'untested', label: 'Untested' },
       { value: 'yes', label: 'Yes' },
@@ -154,6 +155,7 @@ export default async function submit() {
 
   const configPlugin = await select({
     message: 'Includes Expo config plugin?',
+    showInstructions: false,
     options: [
       { value: 'no', label: 'No' },
       { value: 'yes', label: 'Yes' },
@@ -208,12 +210,13 @@ export default async function submit() {
     process.exit(0);
   }
 
-  // TODO: support passing package name of fork package for Vega
+  // TODO: support passing package name of fork package for Harmony/Vega
   const compatibility = await multiselect({
     message: 'Package compatibility:',
     options: [
       { value: 'expoGo', label: 'Expo Go' },
       { value: 'fireos', label: 'Amazon Fire OS' },
+      { value: 'harmony', label: 'HarmonyOS' },
       { value: 'horizon', label: 'Meta Horizon OS' },
       { value: 'vegaos', label: 'Vega OS' },
     ],

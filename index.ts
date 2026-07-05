@@ -36,6 +36,7 @@ async function main() {
         },
         { value: 'help', label: 'Help and usage' },
       ],
+      showInstructions: false,
     });
 
     if (isCancel(cmd)) {

@@ -13,6 +13,7 @@ export async function checkGHCLIAvailability() {
 
         const tryLogin = await confirm({
           message: 'Would you like to login now?',
+          vertical: true,
         });
 
         if (isCancel(tryLogin) || !tryLogin) {

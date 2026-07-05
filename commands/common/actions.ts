@@ -77,6 +77,7 @@ export async function printSummaryAndConfirm(packageEntry: LibraryDataEntryType,
 
   const continueProcess = await confirm({
     message: 'Would you like to continue the process?',
+    vertical: true,
   });
 
   if (isCancel(continueProcess) || !continueProcess) {
