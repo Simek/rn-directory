@@ -11,6 +11,7 @@ export type LibraryDataEntryType = {
   windows?: boolean;
   macos?: boolean;
   fireos?: boolean;
+  harmony?: boolean | string;
   horizon?: boolean;
   tvos?: boolean;
   visionos?: boolean;

@@ -244,6 +244,7 @@ export default async function submit() {
     windows: platforms.includes('windows') ? true : undefined,
     expoGo: compatibility.includes('expoGo') ? true : undefined,
     fireos: compatibility.includes('fireos') ? true : undefined,
+    harmony: compatibility.includes('harmony') ? true : undefined,
     horizon: compatibility.includes('horizon') ? true : undefined,
     vegaos: compatibility.includes('vegaos') ? true : undefined,
   };
