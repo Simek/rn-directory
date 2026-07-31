@@ -3,7 +3,14 @@ import { $ } from 'bun';
 import { blue, bold } from 'picocolors';
 
 import { type LibraryDataEntryType, type PackageJsonRepository } from '../types';
-import { directoryExist, getExampleDirectories, isValidGHUrl, parseGitHubUrl, parseRepositoryData } from '../utils';
+import {
+  directoryExist,
+  fileExist,
+  getExampleDirectories,
+  isValidGHUrl,
+  parseGitHubUrl,
+  parseRepositoryData,
+} from '../utils';
 
 import {
   createAndPushCommit,
@@ -48,12 +55,16 @@ export default async function autoSubmit() {
     process.exit(1);
   }
 
-  const repositoryUrl = parseRepositoryData(repositoryData);
+  const { repositoryUrl, repositoryError } = parseRepositoryData(repositoryData);
 
-  if (!repositoryUrl || !isValidGHUrl(repositoryUrl)) {
-    cancel(
-      `Invalid repository URL (${repositoryUrl}), see: https://docs.npmjs.com/cli/v11/configuring-npm/package-json#repository.`
-    );
+  if (repositoryError || !repositoryUrl || !isValidGHUrl(repositoryUrl)) {
+    if (!repositoryError) {
+      cancel(
+        `Invalid repository URL (${repositoryUrl}).\n   See: https://docs.npmjs.com/cli/v11/configuring-npm/package-json#repository.`
+      );
+    } else {
+      cancel(`${repositoryError}\n   See: https://docs.npmjs.com/cli/v11/configuring-npm/package-json#repository.`);
+    }
     process.exit(1);
   }
 
@@ -68,7 +79,7 @@ export default async function autoSubmit() {
     }
   }
 
-  const hasPluginFile = await Bun.file('app.plugin.js').exists();
+  const hasPluginFile = fileExist('app.plugin.js');
   const exampleDirectories = getExampleDirectories();
 
   // TODO: improve entry
@@ -77,6 +88,13 @@ export default async function autoSubmit() {
     examples:
       exampleDirectories.length > 0 ? exampleDirectories.map(path => `${repositoryUrl}/tree/HEAD/${path}`) : undefined,
     configPlugin: hasPluginFile ? true : undefined,
+    newArchitecture:
+      Object.hasOwn(packageJsonContent, 'codegenConfig') ||
+      fileExist('expo-module.config.json') ||
+      fileExist('nitro.json') ||
+      fileExist('turbo.json')
+        ? true
+        : undefined,
     ios: directoryExist('ios') || directoryExist('apple') ? true : undefined,
     android: directoryExist('android') ? true : undefined,
     expoGo: !directoryExist('android') && !directoryExist('ios') && !directoryExist('apple') ? true : undefined,

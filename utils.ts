@@ -1,17 +1,17 @@
-import { log } from '@clack/prompts';
-
 import { type PackageJsonRepository } from './types';
 
 export function directoryExist(path: string) {
   return !!Array.from(new Bun.Glob(path).scanSync({ onlyFiles: false }))[0];
 }
 
+export function fileExist(path: string) {
+  return !!Array.from(new Bun.Glob(path).scanSync({ onlyFiles: true }))[0];
+}
+
 export function getExampleDirectories() {
-  const packageJsonPaths = [
-    ...new Bun.Glob('example/package.json').scanSync({ onlyFiles: true }),
-    ...new Bun.Glob('examples/package.json').scanSync({ onlyFiles: true }),
-    ...new Bun.Glob('examples/*/package.json').scanSync({ onlyFiles: true }),
-  ];
+  const packageJsonPaths = ['example/package.json', 'examples/package.json', 'examples/*/package.json'].filter(
+    fileExist
+  );
 
   return [...new Set(packageJsonPaths)]
     .map(packageJsonPath => packageJsonPath.replace(/[/\\]package\.json$/, '').replaceAll('\\', '/'))
@@ -26,18 +26,19 @@ export async function deleteFile(filename: string) {
 export function parseRepositoryData(data: PackageJsonRepository) {
   if (typeof data === 'string') {
     if (data.startsWith('github:')) {
-      return `https://github.com/${data.replace('github:', '')}`;
+      return { repositoryUrl: `https://github.com/${data.replace('github:', '')}` };
     }
-    log.error('Currently only GitHub hosted packages are supported in the directory.');
-    return undefined;
+    return {
+      repositoryError: `Invalid repository string format or non-GitHub URL (${data}).\n   Currently only GitHub hosted packages are supported in the directory.`,
+    };
   }
 
   const cleanGitHubUrl = data.url.replace('git+', '').replace('.git', '');
 
   if ('directory' in data) {
-    return `${cleanGitHubUrl}/tree/HEAD/${data.directory}`;
+    return { repositoryUrl: `${cleanGitHubUrl}/tree/HEAD/${data.directory}` };
   }
-  return cleanGitHubUrl;
+  return { repositoryUrl: cleanGitHubUrl };
 }
 
 export function parseGitHubUrl(url: string) {
