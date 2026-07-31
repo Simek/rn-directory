@@ -6,6 +6,18 @@ export function directoryExist(path: string) {
   return !!Array.from(new Bun.Glob(path).scanSync({ onlyFiles: false }))[0];
 }
 
+export function getExampleDirectories() {
+  const packageJsonPaths = [
+    ...new Bun.Glob('example/package.json').scanSync({ onlyFiles: true }),
+    ...new Bun.Glob('examples/package.json').scanSync({ onlyFiles: true }),
+    ...new Bun.Glob('examples/*/package.json').scanSync({ onlyFiles: true }),
+  ];
+
+  return [...new Set(packageJsonPaths)]
+    .map(packageJsonPath => packageJsonPath.replace(/[/\\]package\.json$/, '').replaceAll('\\', '/'))
+    .sort();
+}
+
 export async function deleteFile(filename: string) {
   const tempFile = Bun.file(filename);
   await tempFile.delete();

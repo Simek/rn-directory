@@ -3,7 +3,7 @@ import { $ } from 'bun';
 import { blue, bold } from 'picocolors';
 
 import { type LibraryDataEntryType, type PackageJsonRepository } from '../types';
-import { directoryExist, isValidGHUrl, parseGitHubUrl, parseRepositoryData } from '../utils';
+import { directoryExist, getExampleDirectories, isValidGHUrl, parseGitHubUrl, parseRepositoryData } from '../utils';
 
 import {
   createAndPushCommit,
@@ -69,11 +69,13 @@ export default async function autoSubmit() {
   }
 
   const hasPluginFile = await Bun.file('app.plugin.js').exists();
+  const exampleDirectories = getExampleDirectories();
 
   // TODO: improve entry
   const packageEntry: LibraryDataEntryType = {
     githubUrl: repositoryUrl,
-    examples: directoryExist('example') ? [`${repositoryUrl}/tree/HEAD/example`] : undefined,
+    examples:
+      exampleDirectories.length > 0 ? exampleDirectories.map(path => `${repositoryUrl}/tree/HEAD/${path}`) : undefined,
     configPlugin: hasPluginFile ? true : undefined,
     ios: directoryExist('ios') || directoryExist('apple') ? true : undefined,
     android: directoryExist('android') ? true : undefined,
