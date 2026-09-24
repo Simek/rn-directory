@@ -4,6 +4,7 @@ import { cancel, intro, isCancel, log, outro, select } from '@clack/prompts';
 import { blue, bold, yellow } from 'picocolors';
 
 import autoSubmit from './commands/autoSubmit.ts';
+import checkBundle from './commands/checkBundle.ts';
 import help from './commands/help.ts';
 import submit from './commands/submit.ts';
 import { type Command } from './types';
@@ -12,6 +13,7 @@ const commands = {
   help,
   submit,
   autoSubmit,
+  checkBundle,
 } satisfies Record<string, Command>;
 
 async function main() {
@@ -33,6 +35,11 @@ async function main() {
           value: 'autoSubmit',
           label: `Auto-submit ${yellow(bold('[Experimental]'))}`,
           hint: 'Gather information about package in the current directory and prepare entry to submit',
+        },
+        {
+          value: 'checkBundle',
+          label: 'Check bundle',
+          hint: 'Check the bundle configuration and contents',
         },
         { value: 'help', label: 'Help and usage' },
       ],
@@ -66,6 +73,6 @@ async function main() {
 }
 
 main().catch(err => {
-  log.error(err);
+  log.error(err instanceof Error ? err.message : String(err));
   process.exit(1);
 });
