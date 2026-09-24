@@ -8,11 +8,11 @@ import help from './commands/help.ts';
 import submit from './commands/submit.ts';
 import { type Command } from './types';
 
-const commands: Record<string, Command> = {
+const commands = {
   help,
   submit,
   autoSubmit,
-};
+} satisfies Record<string, Command>;
 
 async function main() {
   const argv = process.argv.slice(2);
@@ -52,10 +52,12 @@ async function main() {
     process.exit(0);
   }
 
-  const handler = commands[cmd];
+  const handler: Command | undefined = Object.hasOwn(commands, cmd)
+    ? commands[cmd as keyof typeof commands]
+    : undefined;
 
   if (!handler) {
-    log.error(`Unknown command: ${bold(cmd)}\n`);
+    log.error(`Unknown command: ${bold(String(cmd))}\n`);
     help();
     process.exit(1);
   }
