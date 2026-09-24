@@ -12,11 +12,13 @@ The `rn-directory` CLI gathers the required information manually or automaticall
 
 ## Usage
 
-```sh
+```zsh
 # Manually enter package data for the submission
-bunx rn-directory submit 
+bunx rn-directory submit
+
 # Create entry automatically for the package in current directory (experimental)
-bunx rn-directory autoSubmit 
+bunx rn-directory autoSubmit
+
 # Check the package bundle configuration and contents, outputs suggestion for files to ignore
 bunx rn-directory bundleCheck 
 ```
