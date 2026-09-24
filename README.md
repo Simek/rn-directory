@@ -13,14 +13,16 @@ The `rn-directory` CLI gathers the required information manually or automaticall
 ## Usage
 
 ```sh
-bunx rn-directory submit # manually enter package data
-# OR
-bunx rn-directory autoSubmit # create entry automatically for the package in current directory
+# Manually enter package data for the submission
+bunx rn-directory submit 
+# Create entry automatically for the package in current directory (experimental)
+bunx rn-directory autoSubmit 
+# Check the package bundle configuration and contents, outputs suggestion for files to ignore
+bunx rn-directory bundleCheck 
 ```
 
 ## Development
 
 ```sh
-bun install
-bun link
+bun dev:prepare
 ```
