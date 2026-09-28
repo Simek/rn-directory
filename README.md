@@ -20,7 +20,7 @@ bunx rn-directory submit
 bunx rn-directory autoSubmit
 
 # Check the package bundle configuration and contents, outputs suggestion for files to ignore
-bunx rn-directory bundleCheck 
+bunx rn-directory bundleCheck
 ```
 
 ## Development

@@ -33,14 +33,61 @@ export async function forkRNDRepo() {
   return forkRepo;
 }
 
+async function getForkUpstreamComparison(forkRepo: string) {
+  const forkOwner = forkRepo.split('/')[0];
+  const comparison = (
+    await $`gh api repos/${BASE_REPO}/compare/main...${forkOwner}:main -q '[.base_commit.sha, .behind_by] | @tsv'`.text()
+  )
+    .trim()
+    .split('\t');
+  const [upstreamSHA, behindByValue] = comparison;
+  const behindBy = Number(behindByValue);
+
+  if (!upstreamSHA || !Number.isSafeInteger(behindBy) || behindBy < 0) {
+    throw new Error(`Cannot determine whether ${forkRepo} is up to date with ${BASE_REPO}.`);
+  }
+
+  return { upstreamSHA, behindBy };
+}
+
 export async function createBranchInFork(forkRepo: string, branchName: string) {
   const progress = spinner();
-  progress.start('Creating branch in the fork');
+  progress.start('Checking fork against the upstream repository');
 
-  const forkSHA = (await $`gh api repos/${forkRepo}/git/ref/heads/main -q .object.sha`.text()).trim();
+  let { upstreamSHA, behindBy } = await getForkUpstreamComparison(forkRepo);
+
+  progress.stop(behindBy === 0 ? 'Your fork is up to date with upstream' : "It's time to sync your fork");
+
+  if (behindBy > 0) {
+    log.warn(`Your fork is ${behindBy} commit${behindBy === 1 ? '' : 's'} behind upstream.`);
+    log.info(`Update the main branch at https://github.com/${forkRepo}, then confirm to check again.`);
+
+    const forkUpdated = await confirm({
+      message: 'Have you updated your fork with the upstream repository?',
+      vertical: true,
+    });
+
+    if (isCancel(forkUpdated) || !forkUpdated) {
+      cancel('Submission cancelled.');
+      process.exit(0);
+    }
+
+    progress.start('Re-checking fork against the upstream repository');
+    ({ upstreamSHA, behindBy } = await getForkUpstreamComparison(forkRepo));
+    progress.stop(behindBy === 0 ? 'Your fork is up to date with upstream' : "It's still behind upstream");
+
+    if (behindBy > 0) {
+      cancel(
+        `Fork is still ${behindBy} commit${behindBy === 1 ? '' : 's'} behind upstream. Update it and try submitting again.`
+      );
+      process.exit(1);
+    }
+  }
+
+  progress.start('Creating/updating the submission branch');
 
   try {
-    await $`gh api repos/${forkRepo}/git/refs -f ref="refs/heads/${branchName}" -f sha="${forkSHA}"`.quiet();
+    await $`gh api repos/${forkRepo}/git/refs -f ref="refs/heads/${branchName}" -f sha="${upstreamSHA}"`.quiet();
   } catch (error) {
     if (error instanceof $.ShellError) {
       if (error.stderr.toString().includes('HTTP 422')) {
@@ -55,7 +102,9 @@ export async function createBranchInFork(forkRepo: string, branchName: string) {
     }
   }
 
-  progress.stop('Branch created in the fork');
+  await $`gh api repos/${forkRepo}/merges -f base=${branchName} -f head=${upstreamSHA} -f commit_message="Sync ${branchName} with upstream main"`.quiet();
+
+  progress.stop('Submission branch is up to date with upstream main');
 }
 
 export async function fetchLibrariesFromForkBranch(forkRepo: string, branchName: string) {
