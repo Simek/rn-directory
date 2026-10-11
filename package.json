@@ -27,10 +27,12 @@
   },
   "dependencies": {
     "@clack/prompts": "^1.8.1",
-    "picocolors": "^1.1.1"
+    "picocolors": "^1.1.1",
+    "spdx-expression-parse": "^5.0.0"
   },
   "devDependencies": {
     "@types/bun": "^1.4.2",
+    "@types/spdx-expression-parse": "^4.0.0",
     "oxfmt": "^0.72.0",
     "oxlint": "^1.87.0",
     "oxlint-plugin-golden": "^0.1.2",

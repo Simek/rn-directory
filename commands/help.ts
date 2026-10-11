@@ -8,6 +8,7 @@ export default function help() {
 Commands:
   ${bold('submit')}       ${dim('manually create a PR in React Native Directory')}
   ${bold('autoSubmit')}   ${dim('automatically creates a PR in React Native Directory for the library in current directory')}
+  ${bold('doctor')}       ${dim('check the package metadata')}
   ${bold('checkBundle')}  ${dim('check the package bundle configuration and contents')}
   ${bold('help')}         ${dim('show this help')}
 

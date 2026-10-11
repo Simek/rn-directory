@@ -19,6 +19,9 @@ bunx rn-directory submit
 # Create entry automatically for the package in current directory (experimental)
 bunx rn-directory autoSubmit
 
+# Check the package metadata affecting directory scoring and presence of essential files
+bunx rn-directory doctor
+
 # Check the package bundle configuration and contents, outputs suggestion for files to ignore
 bunx rn-directory bundleCheck
 ```

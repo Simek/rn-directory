@@ -5,6 +5,7 @@ import { blue, bold, yellow } from 'picocolors';
 
 import autoSubmit from './commands/autoSubmit.ts';
 import checkBundle from './commands/checkBundle.ts';
+import doctor from './commands/doctor.ts';
 import help from './commands/help.ts';
 import submit from './commands/submit.ts';
 import { type Command } from './types';
@@ -13,6 +14,7 @@ const commands = {
   help,
   submit,
   autoSubmit,
+  doctor,
   checkBundle,
 } satisfies Record<string, Command>;
 
@@ -35,6 +37,11 @@ async function main() {
           value: 'autoSubmit',
           label: `Auto-submit ${yellow(bold('[Experimental]'))}`,
           hint: 'Gather information about package in the current directory and prepare entry to submit',
+        },
+        {
+          value: 'doctor',
+          label: 'Doctor',
+          hint: 'Check the package.json metadata and essential files',
         },
         {
           value: 'checkBundle',

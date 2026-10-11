@@ -2,6 +2,8 @@ import { cancel, intro, log, outro, spinner } from '@clack/prompts';
 import { $ } from 'bun';
 import { blue, bold, gray, green, white, yellow } from 'picocolors';
 
+import { checkIsPackagePrivate } from '../utils.ts';
+
 import { DIRECTORY_WARNINGS, FILE_WARNINGS } from './common/constants';
 
 function getPackedFiles(packOutput: string) {
@@ -50,13 +52,7 @@ export default async function checkBundle() {
 
   const packageJsonContent = await packageJson.json();
 
-  if (packageJsonContent.private) {
-    log.info(
-      'You cannot check bundle of package which is marked as private, since it is not ment to be published.\nIf you are in monorepo, the checks need to be done from package subdirectory.\n'
-    );
-    cancel(`Aborting the check!`);
-    process.exit(1);
-  }
+  checkIsPackagePrivate(packageJsonContent.private);
 
   const packageName = packageJsonContent.name;
 

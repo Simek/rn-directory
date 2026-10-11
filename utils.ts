@@ -1,3 +1,5 @@
+import { cancel, log } from '@clack/prompts';
+
 import { type PackageJsonRepository } from './types';
 
 export function directoryExist(path: string) {
@@ -110,4 +112,14 @@ export function isValidImageUrl(url: string) {
 
 export function isValidNpmPackageName(name: string) {
   return /^(?:@[a-z0-9][a-z0-9-._~]*\/)?[a-z0-9][a-z0-9-._~]*$/i.test(name);
+}
+
+export function checkIsPackagePrivate(privateValue: boolean) {
+  if (privateValue) {
+    log.info(
+      'You cannot check bundle of package which is marked as private, since it is not meant to be published.\nIf you are in monorepo, the checks need to be done from package subdirectory.\n'
+    );
+    cancel(`Aborting the check!`);
+    process.exit(1);
+  }
 }
