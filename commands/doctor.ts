@@ -9,7 +9,7 @@ type PackageJsonValue = string | number | boolean | null | PackageJsonValue[] | 
 type PackageJsonObject = { [key: string]: PackageJsonValue };
 type DoctorCheck = { field: string; valid: boolean; expectation: string };
 
-function isRecord(value: PackageJsonValue): value is PackageJsonObject {
+function isRecord(value: PackageJsonValue | undefined): value is PackageJsonObject {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
@@ -123,7 +123,16 @@ export default async function doctor() {
     {
       field: 'license',
       valid: await hasValidLicense(packageJsonContent.license),
-      expectation: 'a valid SPDX expression or an existing top-level file via "SEE LICENSE IN <filename>"',
+      expectation:
+        'a valid license name, SPDX expression, or an existing top-level file via "SEE LICENSE IN <filename>"',
+    },
+    {
+      field: 'peerDependencies',
+      valid:
+        isRecord(packageJsonContent.peerDependencies) &&
+        typeof packageJsonContent.peerDependencies.react === 'string' &&
+        typeof packageJsonContent.peerDependencies['react-native'] === 'string',
+      expectation: '`react` and `react-native` defined in peer dependencies',
     },
   ];
   const fileChecks = [
