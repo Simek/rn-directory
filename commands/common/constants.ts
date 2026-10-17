@@ -3,9 +3,12 @@ export const LIBRARIES_FILE = 'react-native-libraries.json';
 export const OXFMT_TMP_CONFIG = '.rnd.oxfmtrc.json';
 
 export const FILE_WARNINGS = [
+  '*.apinotes',
   '*.iml',
   '*.keystore',
-  '*.apinotes',
+  '*.lock',
+  '*.log',
+  '*.test.*',
   '_config.yml',
   '.all-contributorsrc',
   '.babelrc',
@@ -70,6 +73,9 @@ export const DIRECTORY_WARNINGS = [
   '.github',
   '.gradle',
   '.idea',
+  '.settings',
+  '.transforms',
+  '.turbo',
   '.vs',
   '__tests__',
   '__mocks__',
