@@ -116,10 +116,12 @@ export function isValidNpmPackageName(name: string) {
 
 export function checkIsPackagePrivate(privateValue: boolean) {
   if (privateValue) {
-    log.info(
-      'You cannot check bundle of package which is marked as private, since it is not meant to be published.\nIf you are in monorepo, the checks need to be done from package subdirectory.\n'
-    );
-    cancel(`Aborting the check!`);
-    process.exit(1);
+    return;
   }
+
+  log.info(
+    'You cannot check bundle of package which is marked as private, since it is not meant to be published.\nIf you are in monorepo, the checks need to be done from package subdirectory.\n'
+  );
+  cancel(`Aborting the check!`);
+  process.exit(1);
 }

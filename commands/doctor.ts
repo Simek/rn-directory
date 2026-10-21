@@ -9,7 +9,7 @@ type PackageJsonValue = string | number | boolean | null | PackageJsonValue[] | 
 type PackageJsonObject = { [key: string]: PackageJsonValue };
 type DoctorCheck = { field: string; valid: boolean; expectation: string };
 
-function isRecord(value: PackageJsonValue | undefined): value is PackageJsonObject {
+function isRecord(value?: PackageJsonValue): value is PackageJsonObject {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
