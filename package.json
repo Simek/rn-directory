@@ -31,14 +31,14 @@
     "spdx-expression-parse": "^5.0.0"
   },
   "devDependencies": {
-    "@pobammer-ts/small-rules": "^3.6.1",
-    "@types/bun": "^1.4.3",
+    "@pobammer-ts/small-rules": "^3.11.0",
+    "@types/bun": "^1.4.4",
     "@types/spdx-expression-parse": "^4.0.0",
-    "oxfmt": "^0.74.0",
-    "oxlint": "^1.89.0",
+    "oxfmt": "^0.77.0",
+    "oxlint": "^1.92.0",
     "oxlint-plugin-golden": "^0.1.2",
-    "oxlint-plugin-react-doctor": "^0.9.18",
-    "oxlint-tsgolint": "^7.0.2004",
+    "oxlint-plugin-react-doctor": "^0.9.22",
+    "oxlint-tsgolint": "^7.0.2006",
     "typescript": "^7.0.2"
   },
   "engines": {
