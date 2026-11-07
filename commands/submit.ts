@@ -105,35 +105,42 @@ export default async function submit() {
 
   await checkPresenceInRegistries(packageName);
 
-  const examples = await text({
-    message: 'Examples URL list:',
-    placeholder: 'separate multiple URLs with comma, can be empty',
-    validate(value) {
-      return validateUrlsListString(value, 'The following example URLs are invalid', isValidUrl);
-    },
+  const platforms = await multiselect({
+    message: 'Supported platforms:',
+    options: [
+      { value: 'android', label: 'Android' },
+      { value: 'ios', label: 'iOS' },
+      { value: 'web', label: 'Web' },
+      { value: 'macos', label: 'macOS', hint: 'Out-of-tree platform, requires an example' },
+      { value: 'tvos', label: 'tvOS', hint: 'Out-of-tree platform, requires an example' },
+      { value: 'visionos', label: 'visionOS', hint: 'Out-of-tree platform, requires an example' },
+      { value: 'windows', label: 'Windows', hint: 'Out-of-tree platform, requires an example' },
+    ],
+    required: true,
   });
 
-  if (isCancel(examples)) {
+  if (isCancel(platforms)) {
     cancel('Submission cancelled.');
     process.exit(0);
   }
 
-  const examplesList = examples?.split(',').filter(Boolean);
-
-  const images = await text({
-    message: 'Images URL list:',
-    placeholder: 'separate multiple URLs with comma, no marketing materials, can be empty',
-    validate(value) {
-      return validateUrlsListString(value, 'The following image URLs are invalid', isValidImageUrl);
-    },
+  // TODO: support passing package name of fork package for Harmony/Vega
+  const compatibility = await multiselect({
+    message: 'Package compatibility:',
+    options: [
+      { value: 'expoGo', label: 'Expo Go' },
+      { value: 'fireos', label: 'Amazon Fire OS' },
+      { value: 'harmony', label: 'HarmonyOS' },
+      { value: 'horizon', label: 'Meta Horizon OS' },
+      { value: 'vegaos', label: 'Vega OS' },
+    ],
+    required: false,
   });
 
-  if (isCancel(images)) {
+  if (isCancel(compatibility)) {
     cancel('Submission cancelled.');
     process.exit(0);
   }
-
-  const imagesList = images?.split(',').filter(Boolean);
 
   // TODO: support New Architecture note
   const newArch = await select({
@@ -151,6 +158,29 @@ export default async function submit() {
   if (isCancel(newArch)) {
     cancel('Submission cancelled.');
     process.exit(0);
+  }
+
+  let swiftPM;
+  if (
+    platforms.includes('ios') ||
+    platforms.includes('macos') ||
+    platforms.includes('tvos') ||
+    platforms.includes('visionos')
+  ) {
+    swiftPM = await select({
+      message: 'Support Swift Package Manager?',
+      showInstructions: false,
+      options: [
+        { value: undefined, label: 'Skip' },
+        { value: true, label: 'Yes' },
+        { value: false, label: 'No' },
+      ],
+    });
+
+    if (isCancel(swiftPM)) {
+      cancel('Submission cancelled.');
+      process.exit(0);
+    }
   }
 
   const configPlugin = await select({
@@ -191,42 +221,35 @@ export default async function submit() {
     }
   }
 
-  const platforms = await multiselect({
-    message: 'Supported platforms:',
-    options: [
-      { value: 'android', label: 'Android' },
-      { value: 'ios', label: 'iOS' },
-      { value: 'web', label: 'Web' },
-      { value: 'macos', label: 'macOS', hint: 'Out-of-tree platform, requires an example' },
-      { value: 'tvos', label: 'tvOS', hint: 'Out-of-tree platform, requires an example' },
-      { value: 'visionos', label: 'visionOS', hint: 'Out-of-tree platform, requires an example' },
-      { value: 'windows', label: 'Windows', hint: 'Out-of-tree platform, requires an example' },
-    ],
-    required: true,
+  const examples = await text({
+    message: 'Examples URL list:',
+    placeholder: 'separate multiple URLs with comma, can be empty',
+    validate(value) {
+      return validateUrlsListString(value, 'The following example URLs are invalid', isValidUrl);
+    },
   });
 
-  if (isCancel(platforms)) {
+  if (isCancel(examples)) {
     cancel('Submission cancelled.');
     process.exit(0);
   }
 
-  // TODO: support passing package name of fork package for Harmony/Vega
-  const compatibility = await multiselect({
-    message: 'Package compatibility:',
-    options: [
-      { value: 'expoGo', label: 'Expo Go' },
-      { value: 'fireos', label: 'Amazon Fire OS' },
-      { value: 'harmony', label: 'HarmonyOS' },
-      { value: 'horizon', label: 'Meta Horizon OS' },
-      { value: 'vegaos', label: 'Vega OS' },
-    ],
-    required: false,
+  const examplesList = examples?.split(',').filter(Boolean);
+
+  const images = await text({
+    message: 'Images URL list:',
+    placeholder: 'separate multiple URLs with comma, no marketing materials, can be empty',
+    validate(value) {
+      return validateUrlsListString(value, 'The following image URLs are invalid', isValidImageUrl);
+    },
   });
 
-  if (isCancel(compatibility)) {
+  if (isCancel(images)) {
     cancel('Submission cancelled.');
     process.exit(0);
   }
+
+  const imagesList = images?.split(',').filter(Boolean);
 
   const packageEntry: LibraryDataEntryType = {
     githubUrl: repositoryUrl,
@@ -235,6 +258,7 @@ export default async function submit() {
     images: imagesList.length > 0 ? imagesList : undefined,
     newArchitecture: getNewArchitectureValue(newArch),
     configPlugin: getConfigPluginValue(configPluginUrl ?? configPlugin),
+    swiftPM,
     ios: platforms.includes('ios') ? true : undefined,
     android: platforms.includes('android') ? true : undefined,
     web: platforms.includes('web') ? true : undefined,
@@ -260,7 +284,7 @@ export default async function submit() {
   commitProgress.start('Creating commit and pushing');
 
   const librariesArray = await fetchLibrariesFromForkBranch(forkRepo, branchName);
-  const libraryIndex = librariesArray.findIndex(({ githubUrl }) => githubUrl === repositoryUrl);
+  const libraryIndex = librariesArray.findIndex(({ githubUrl }) => githubUrl === githubUrl);
 
   if (libraryIndex !== -1) {
     log.warn(`Replacing already existing entry in the definitions file on the branch`);

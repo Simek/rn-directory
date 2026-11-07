@@ -21,6 +21,7 @@ export type LibraryDataEntryType = {
   template?: boolean;
   newArchitecture?: boolean | 'new-arch-only';
   newArchitectureNote?: string;
+  swiftPM?: boolean;
   configPlugin?: boolean | string;
   alternatives?: string[];
   npmPkg?: string;
