@@ -22,23 +22,22 @@
   "module": "index.ts",
   "scripts": {
     "dev:prepare": "bun link && bun link rn-directory",
-    "lint": "oxlint --type-aware && oxfmt --check",
-    "lint:fix": "oxlint --type-aware --fix && oxfmt"
+    "lint": "oxlint && oxfmt --check",
+    "lint:fix": "oxlint --fix && oxfmt"
   },
   "dependencies": {
-    "@clack/prompts": "^1.8.1",
+    "@clack/prompts": "^1.9.0",
     "picocolors": "^1.1.1",
     "spdx-expression-parse": "^5.0.0"
   },
   "devDependencies": {
-    "@pobammer-ts/small-rules": "^3.11.0",
-    "@types/bun": "^1.4.4",
+    "@pobammer-ts/small-rules": "^3.13.0",
+    "@types/bun": "^1.4.5",
     "@types/spdx-expression-parse": "^4.0.0",
-    "oxfmt": "^0.77.0",
-    "oxlint": "^1.92.0",
+    "oxfmt": "^0.79.0",
+    "oxlint": "^1.94.0",
     "oxlint-plugin-golden": "^0.1.2",
-    "oxlint-plugin-react-doctor": "^0.9.22",
-    "oxlint-tsgolint": "^7.0.2006",
+    "oxlint-tsgolint": "^7.0.2008",
     "typescript": "^7.0.2"
   },
   "engines": {
